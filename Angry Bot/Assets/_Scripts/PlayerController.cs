@@ -28,12 +28,20 @@ public class PlayerController : MonoBehaviour
     public AnimationClip walkAni;
     public AnimationClip runAni;
 
+    // 미사일 발사
+    public GameObject bullet;
+    public GameObject shotFx;
+    public Transform shotPoint;
+    public AudioClip shotSound;
+    private AudioSource audioSrc;
+
     private void Start()
     {
         // 변수          열거형
         playerState = PlayerState.Idle;
 
         anim = GetComponent<Animation>();
+        audioSrc = GetComponent<AudioSource>();
     }
 
     private void Update()
@@ -68,6 +76,12 @@ public class PlayerController : MonoBehaviour
             playerState = PlayerState.Idle;
             speed = 0;
         }
+
+        if (Input.GetKeyDown(KeyCode.Space) && playerState != PlayerState.Dead)
+        {
+            //StartCoroutine("Shot"); , StartCoroutine(Shot()) 과 같음
+            StartCoroutine(nameof(Shot));
+        }
     }
     void LookUpdate()
     {
@@ -96,5 +110,30 @@ public class PlayerController : MonoBehaviour
             case PlayerState.Dead:      anim.CrossFade(idleAni.name, 0.2f);
                 break;
         }
+    }
+
+    IEnumerator Shot()
+    {
+        GameObject bulletObj = 
+            Instantiate(
+                bullet, 
+                shotPoint.position,
+                // 기다란 총알이기에 바라보는방향 조정 필요
+                Quaternion.LookRotation(shotPoint.forward));
+
+        // 해당 오브젝트와 bullet 오브젝트 의 충돌 무시
+        Physics.IgnoreCollision(
+            // 총알 오브젝트 는 BoxCollider 이지만 Collider 가 부모 관계 이기에 상관 없음 
+            bulletObj.GetComponent<Collider>(), 
+            GetComponent<Collider>());
+
+        audioSrc.clip = shotSound;
+        audioSrc.Play();
+
+        shotFx.SetActive(true);
+
+        yield return new WaitForSeconds(0.15f);
+
+        shotFx.SetActive(false);
     }
 }
