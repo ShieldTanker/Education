@@ -57,30 +57,33 @@ public class PlayerController : MonoBehaviour
         float xx = Input.GetAxis("Horizontal");
         float zz = Input.GetAxis("Vertical");
 
-        if (xx != 0 || zz != 0)
+        if (playerState != PlayerState.Attack)
         {
-            // 맴버 변수 lookDirection = 보는 방향
-            lookDirection = (xx * Vector3.right) + (zz * Vector3.forward);
-            speed = walkSpeed;
-            playerState = PlayerState.Walk;
-
-            if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+            if (xx != 0 || zz != 0)
             {
-                speed = runSpeed;
-                playerState = PlayerState.Run;
+                // 맴버 변수 lookDirection = 보는 방향
+                lookDirection = (xx * Vector3.right) + (zz * Vector3.forward);
+                speed = walkSpeed;
+                playerState = PlayerState.Walk;
+
+                if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+                {
+                    speed = runSpeed;
+                    playerState = PlayerState.Run;
+                }
             }
-        }
 
-        else if (playerState != PlayerState.Idle)
-        {
-            playerState = PlayerState.Idle;
-            speed = 0;
-        }
+            else if (playerState != PlayerState.Idle)
+            {
+                playerState = PlayerState.Idle;
+                speed = 0;
+            }
 
-        if (Input.GetKeyDown(KeyCode.Space) && playerState != PlayerState.Dead)
-        {
-            //StartCoroutine("Shot"); , StartCoroutine(Shot()) 과 같음
-            StartCoroutine(nameof(Shot));
+            if (Input.GetKeyDown(KeyCode.Space) && playerState != PlayerState.Dead)
+            {
+                //StartCoroutine("Shot"); , StartCoroutine(Shot()) 과 같음
+                StartCoroutine(nameof(Shot));
+            }
         }
     }
     void LookUpdate()
@@ -132,8 +135,13 @@ public class PlayerController : MonoBehaviour
 
         shotFx.SetActive(true);
 
-        yield return new WaitForSeconds(0.15f);
+        playerState = PlayerState.Attack;
+        speed = 0f;
 
+        yield return new WaitForSeconds(0.15f);
         shotFx.SetActive(false);
+
+        yield return new WaitForSeconds(0.15f);
+        playerState = PlayerState.Idle;
     }
 }

@@ -6,7 +6,7 @@ public class MouseController : MonoBehaviour
 {
     public Transform target;
     public GameObject cursor;
-    public PlayerController plauerCtrl;
+    public PlayerController playerCtrl;
 
     private void Update()
     {
@@ -21,6 +21,13 @@ public class MouseController : MonoBehaviour
             // 부딫힌 위치는 hit 에 저장 되어 있음 (hit.pint.x, 1f (물체에 겹치면 보일수있어 0.5f 만큼 띄움), hit.point.z)
             cursor.transform.position = new Vector3(hit.point.x, 0.5f, hit.point.z);
             // hit.collider -> 오브젝트의 콜라이더 객체
+
+            if (Input.GetMouseButtonDown(0) && playerCtrl.playerState != PlayerState.Dead)
+            {
+                target.position = new Vector3(hit.point.x, 0f, hit.point.z);
+                playerCtrl.lookDirection = target.position - playerCtrl.transform.position;
+                playerCtrl.StartCoroutine("Shot");
+            }
         }
     }
 }
