@@ -1,0 +1,1103 @@
+
+3D 코어 Angry Bot
+////////////////////////////////////////////////////////////////////////////////////
+
+다운 받은 에셋패키지 적용
+
+///////////////////////////////////////////////////////////////////////////////////
+
+프로젝트뷰 > AngryBots > Objetcs > Player(폴더) > Player(파일)
+
+> Show in Explorer 
+
+////////////////////////////////////////////////////////////////////////////////////
+
+애니메이션 타입 Legacy
+
+Player.FBX > 인스펙터뷰 > Rig 탭 > Animation Type 확인 (현재 Legacy)
+
+Legacy : Animation 컴포넌트 (모델마다 애니메이션 다 만들어야함)
+
+Animation 탭 확인 
+Clips 보면
+          Start      End
+Idle        0.0     74.0
+RunFoward   76.0    94.0
+
+등등 으로 되어있음
+
+Idle 애니메이션은 0.0 프레임 부터 74.0 프레임 까지
+RunFoward 애니메이션은 76.0 프레임 부터 94 프레임 까지
+
+Player.FBX 파일 을 하이어라키뷰에 드래그
+
+인스펙터뷰 에서 확인하면 Animations 에 애니메이션 등록 된 것 들을 확인 가능
+
+////////////////////////////////////////////////////////////////////////////////////
+
+애니메이션 타입 Humanoid
+
+하이어라키뷰 에 추가한 Player 오브젝트 제거후
+
+AngryBots > Animations > Enemy > Teddy > Teddy
+
+인스펙터뷰 > Rig 탭 Animation Type 확인 > 현재 Humanoid
+
+Humanoid : Animator 컴포넌트
+
+하이어라키뷰 에 드래그
+
+인스펙터뷰 확인하면 Animator 컴포넌트로 되어있음 Avata 찾아들어가기
+avata 선택후 인스펙터 Configure Avata 클릭하면 뼈대와 애니메이션 확인 가능
+
+////////////////////////////////////////////////////////////////////////////////////
+
+프로젝트뷰 > AngryBots > Prefab > Player 오브젝트 생성
+
+AngryBots > Scripts > Move 스크립트를 Player 오브젝트에 추가
+실행하면 움직임이 이상하게 보임
+> Player 오브젝트에 Move 스크립트 제거 > 
+
+PlayerController 스크립트 생성
+
+스크립트 수정
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+
+// 플레이어 의 현재 상태 확인용
+public enum PlayerState
+{
+    Idle,
+    Walk,
+    Run,
+    Attack,
+    Dead,
+}
+
+public class PlayerController : MonoBehaviour
+{
+    public PlayerState playerState;
+
+    public Vector3 lookDirection;
+    public float speed;
+    public float walkSpeed;
+    public float runSpeed;
+
+    // 플레이어는 Legacy타입
+    private Animation anim;
+    public AnimationClip idleAni;
+    public AnimationClip walkAni;
+    public AnimationClip runAni;
+
+    private void Start()
+    {
+        // 변수          열거형
+        playerState = PlayerState.Idle;
+
+        anim = GetComponent<Animation>();
+    }
+
+    private void Update()
+    {
+        KeyboardInput();
+        LookUpdate();
+        AnimationUpdate();
+    }
+
+    void KeyboardInput()
+    {
+        float xx = Input.GetAxis("Horizontal");
+        float zz = Input.GetAxis("Vertical");
+
+        if (xx != 0 || zz != 0)
+        {
+            // 맴버 변수 lookDirection = 보는 방향
+            lookDirection = (xx * Vector3.right) + (zz * Vector3.forward);
+            speed = walkSpeed;
+            playerState = PlayerState.Walk;
+
+            if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+            {
+                speed = runSpeed;
+                playerState = PlayerState.Run;
+            }
+        }
+
+        else if (playerState != PlayerState.Idle)
+        {
+            playerState = PlayerState.Idle;
+            speed = 0;
+        }
+    }
+    void LookUpdate()
+    {
+        // 바라봐야하는 방향으로의 회전값 계산
+        Quaternion r = Quaternion.LookRotation(lookDirection);
+        
+        // 바라봐야하는 방향으로 천천히 바라보게 (현재 회전값, 목표 회전값 , 회전할 각도)
+        transform.rotation = Quaternion.RotateTowards(transform.rotation, r, 600f * Time.deltaTime);
+
+        transform.Translate(Vector3.forward * speed * Time.deltaTime);
+    }
+
+    void AnimationUpdate()
+    {
+        switch (playerState)
+        {
+            case PlayerState.Idle:      anim.CrossFade(idleAni.name,0.2f);
+                break;
+            case PlayerState.Walk:      anim.CrossFade(walkAni.name,0.2f);
+                break;
+            case PlayerState.Run:       anim.CrossFade(runAni.name,0.2f);
+                break;
+            case PlayerState.Attack:    anim.CrossFade(idleAni.name,0.2f);
+                break;
+            case PlayerState.Dead:      anim.CrossFade(idleAni.name, 0.2f);
+                break;
+        }
+    }
+}
+
+이동키 입력시 자연스럽게 회전하면서 이동
+
+////////////////////////////////////////////////////////////////////////////////////////////
+
+공격 스크립트
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+
+// 플레이어 의 현재 상태 확인용
+public enum PlayerState
+{
+    Idle,
+    Walk,
+    Run,
+    Attack,
+    Dead,
+}
+
+public class PlayerController : MonoBehaviour
+{
+    public PlayerState playerState;
+
+    public Vector3 lookDirection;
+    public float speed;
+    public float walkSpeed;
+    public float runSpeed;
+
+    // 플레이어는 Legacy타입
+    private Animation anim;
+    public AnimationClip idleAni;
+    public AnimationClip walkAni;
+    public AnimationClip runAni;
+
+    // 미사일 발사
+    public GameObject bullet;
+    public GameObject shotFx;
+    public Transform shotPoint;
+    public AudioClip shotSound;
+    private AudioSource audioSrc;
+
+    private void Start()
+    {
+        // 변수          열거형
+        playerState = PlayerState.Idle;
+
+        anim = GetComponent<Animation>();
+        audioSrc = GetComponent<AudioSource>();
+    }
+
+    private void Update()
+    {
+        KeyboardInput();
+        LookUpdate();
+
+        AnimationUpdate();
+    }
+
+    void KeyboardInput()
+    {
+        float xx = Input.GetAxis("Horizontal");
+        float zz = Input.GetAxis("Vertical");
+
+        if (xx != 0 || zz != 0)
+        {
+            // 맴버 변수 lookDirection = 보는 방향
+            lookDirection = (xx * Vector3.right) + (zz * Vector3.forward);
+            speed = walkSpeed;
+            playerState = PlayerState.Walk;
+
+            if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+            {
+                speed = runSpeed;
+                playerState = PlayerState.Run;
+            }
+        }
+
+        else if (playerState != PlayerState.Idle)
+        {
+            playerState = PlayerState.Idle;
+            speed = 0;
+        }
+
+        if (Input.GetKeyDown(KeyCode.Space) && playerState != PlayerState.Dead)
+        {
+            //StartCoroutine("Shot"); , StartCoroutine(Shot()) 과 같음
+            StartCoroutine(nameof(Shot));
+        }
+    }
+    void LookUpdate()
+    {
+        // 바라봐야하는 방향으로의 회전값 계산
+        Quaternion r = Quaternion.LookRotation(lookDirection);
+        
+        // 바라봐야하는 방향으로 천천히 바라보게 (현재 회전값, 목표 회전값 , 회전할 각도)
+        transform.rotation = Quaternion.RotateTowards(transform.rotation, r, 600f * Time.deltaTime);
+
+        transform.Translate(Vector3.forward * speed * Time.deltaTime);
+    }
+
+    void AnimationUpdate()
+    {
+        switch (playerState)
+        {
+            // 애니메이션이 idleAni 안에 들어있는 이름을 가진 애니메이션 으로 0.2초 겹치게 전환
+            case PlayerState.Idle:      anim.CrossFade(idleAni.name,0.2f);
+                break;
+            case PlayerState.Walk:      anim.CrossFade(walkAni.name,0.2f);
+                break;
+            case PlayerState.Run:       anim.CrossFade(runAni.name,0.2f);
+                break;
+            case PlayerState.Attack:    anim.CrossFade(idleAni.name,0.2f);
+                break;
+            case PlayerState.Dead:      anim.CrossFade(idleAni.name, 0.2f);
+                break;
+        }
+    }
+
+    IEnumerator Shot()
+    {
+        GameObject bulletObj = 
+            Instantiate(
+                bullet, 
+                shotPoint.position,
+                // 기다란 총알이기에 바라보는방향 조정 필요
+                Quaternion.LookRotation(shotPoint.forward));
+
+        // 해당 오브젝트와 bullet 오브젝트 의 충돌 무시
+        Physics.IgnoreCollision(
+            // 총알 오브젝트 는 BoxCollider 이지만 Collider 가 부모 관계 이기에 상관 없음 
+            bulletObj.GetComponent<Collider>(), 
+            GetComponent<Collider>());
+
+        audioSrc.clip = shotSound;
+        audioSrc.Play();
+
+        shotFx.SetActive(true);
+
+        yield return new WaitForSeconds(0.15f);
+
+        shotFx.SetActive(false);
+    }
+}
+
+
+이후 Player 오브젝트 참조연결 , 프로젝트뷰 참조연결,
+
+프로젝트뷰 _Scripts 폴더에 C# 스크립트 생성
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class Bullet : MonoBehaviour
+{
+    public float speed;
+    public float power;
+    public float life;
+
+    private void Update()
+    {
+        life -= Time.deltaTime;
+        if (life <= 0)
+        {
+            Destroy(gameObject);
+
+            transform.Translate(Vector3.forward * speed * Time.deltaTime);
+        }
+    }
+}
+
+Bullet 프리팹에 스크립트 추가
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Player 오브젝트 의 자식오브젝트 Flash 에 GunFx 라는 이름의 스크립트 추가
+
+스크립트 수정
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class GunFx : MonoBehaviour
+{
+    public Light gunLight;
+
+    private void Update()
+    {
+        gunLight.range = Random.Range(4f, 10f);
+
+        // 빛이 아닌 오브젝트의 크기 조절
+        transform.localScale = Vector3.one * Random.Range(2f, 4f);
+
+        // transform.localEulerAngles = Quatercion.Euler(270f, 0 , Random.Range) 와 같은 코드
+        transform.localEulerAngles = new Vector3(270f, 0, Random.Range(0, 90f));
+
+    }
+}
+
+Flash 오브젝트의 Light 컴포넌트 참조 연결
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+마우스 클릭 한 곳으로 사격
+
+Player 오브젝트에 MouseController 스크립트 생성
+
+스크립트 수정
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class MouseController : MonoBehaviour
+{
+    public Transform target;
+    public GameObject cursor;
+    public PlayerController plauerCtrl;
+
+    private void Update()
+    {
+        // 메인 카메라의 마우스 위치
+        var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+
+        RaycastHit hit;
+        // ray 와 부딫힌 오브젝트의 정보를 hit 에 넣기 (return은 하나밖에 못주기 때문)
+        // RayCast 는 bool 타입임 물체에 닿으면 true 아니면 false
+        if (Physics.Raycast(ray, out hit, Mathf.Infinity))
+        {
+            // 부딫힌 위치는 hit 에 저장 되어 있음 (hit.pint.x, 1f (물체에 겹치면 보일수있어 0.5f 만큼 띄움), hit.point.z)
+            cursor.transform.position = new Vector3(hit.point.x, 0.5f, hit.point.z);
+            // hit.collider -> 오브젝트의 콜라이더 객체
+        }
+    }
+}
+
+
+3D 오브젝트 > Quad > Cursor 로 이름 변경 > Mesh Collider 삭제 >
+> 프로젝트뷰 검색칸 에 pplane2 오른쪽 거를 Mesh Filter 에 넣기
+> 프로젝뷰 검색 cursor > 왼쪽거를 Mesh Renderer 의 Matetials 에 넣기
+
+Player 오브젝트 Target 과 Cursor 참조연결에 Cursor 오브젝트 참조연결(두 위치 전부)
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+커서 가만히 있는게 밋밋 하니 회전하게 수정
+
+Cursor 오브젝트에 RotateSelf 스크립트 생성
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class RotateSelf : MonoBehaviour
+{
+    public float speed;
+
+    private void Update()
+    {
+        transform.Rotate(new Vector3(0f, speed, 0f) * Time.deltaTime);
+    }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+마우스 클릭방향으로 사격
+
+MouseController 스크립트 수정
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class MouseController : MonoBehaviour
+{
+    public Transform target;
+    public GameObject cursor;
+    public PlayerController playerCtrl;
+
+    private void Update()
+    {
+        // 메인 카메라의 마우스 위치
+        var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+
+        RaycastHit hit;
+        // ray 와 부딫힌 오브젝트의 정보를 hit 에 넣기 (return은 하나밖에 못주기 때문)
+        // RayCast 는 bool 타입임 물체에 닿으면 true 아니면 false
+        if (Physics.Raycast(ray, out hit, Mathf.Infinity))
+        {
+            // 부딫힌 위치는 hit 에 저장 되어 있음 (hit.pint.x, 1f (물체에 겹치면 보일수있어 0.5f 만큼 띄움), hit.point.z)
+            cursor.transform.position = new Vector3(hit.point.x, 0.5f, hit.point.z);
+            // hit.collider -> 오브젝트의 콜라이더 객체
+
+            if (Input.GetMouseButtonDown(0) && playerCtrl.playerState != PlayerState.Dead)
+            {
+                target.position = new Vector3(hit.point.x, 0f, hit.point.z);
+                playerCtrl.lookDirection = target.position - playerCtrl.transform.position;
+                playerCtrl.StartCoroutine("Shot");
+            }
+        }
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+
+사격할때 딜레이 주기
+
+PlayerController 스크립트 수정
+
+Shot() 코루틴 메소드 수정
+
+IEnumerator Shot()
+    {
+        GameObject bulletObj = 
+            Instantiate(
+                bullet, 
+                shotPoint.position,
+                // 기다란 총알이기에 바라보는방향 조정 필요
+                Quaternion.LookRotation(shotPoint.forward));
+
+        // 해당 오브젝트와 bullet 오브젝트 의 충돌 무시
+        Physics.IgnoreCollision(
+            // 총알 오브젝트 는 BoxCollider 이지만 Collider 가 부모 관계 이기에 상관 없음 
+            bulletObj.GetComponent<Collider>(), 
+            GetComponent<Collider>());
+
+        audioSrc.clip = shotSound;
+        audioSrc.Play();
+
+        shotFx.SetActive(true);
+
+        // 플레이어 상태 공격 상태로 변경
+        playerState = PlayerState.Attack;
+        // 속도 0 변경
+		speed = 0f;
+
+        yield return new WaitForSeconds(0.15f);
+        shotFx.SetActive(false);
+
+        yield return new WaitForSeconds(0.15f);
+        playerState = PlayerState.Idle;
+    }
+	
+	
+	
+/////////////////////////////////
+
+체력바 설정
+
+ 하이어라키뷰 UI > Canvas > PlayerCanvas 로 이름변경
+>캔바스를 오브젝트처럼 화면에 배치 시키기
+ > Cancas 컴포넌트 Render Mod Screen Space - OverRay 를 > World Space 로 변경
+> Event Camera 를 메인 카메라로 참조 연결
+
+프로젝트뷰 GUI > Round > Texture Type Sprite (2d and UI) 로 변경
+
+Sprite Editor 하면 에러 뜨는데 해당하는 패키지가 없어서 그럼
+
+Window > Package Manager > 필터를 인 프로젝트가 아니라 유니티로 변경
+> 2D Sprite 패키지 다운
+
+다시 Round > Sprite Edit 4,4,4,4 로 슬라이스
+
+
+Player 오브젝트의 자식오브젝트로 넣기
+
+위치값 0, 2.5, 0
+      5, 2     로 설정
+
+
+PlayerCanvas 의 자깃 오브젝트로 UI > Slider 추가 > LifeBar 로 이름 변경
+> LifeBar 자식오브젝트의 HandleSlideArea 삭제
+
+
+
+사용자가 값 변경 못하게 설정
+
+LifeBar 의 Slider 컴포넌트 Interactable 체크 해제
+핸들 삭제 해서 Target Graphic 이 Missing 값임 > Dellete 키 눌러 None 으로 변경
+
+
+Dynamic Pixels Per Unit : 텍스트 1유닛당 픽셀 수
+
+Reference Pixels Per    : 텍스트 제외 1유닛당 픽셀 수
+
+
+PlayerCanvas > Canvas Scaler > Reference Pixels Per 를 1로
+
+LifeBar 크기와 맞추기위해
+
+LifeBar 자식오브젝트 의 FillArea 위치값 전부 0,0,0
+                                         0,0 으로 변경
+Fill 도 마찬가지 전부 위치값 0으로 변경
+
+
+
+프로젝뷰 > GUI > Light > Texture Type : Sprite (2D and UI)
+> Sprite Editor 값 1,1,1,1
+
+LifeBar > FillArea > Fill > Image 에 수정한 Light 로 대체
+> 색상 원하는 색으로 변경
+
+이름표시
+PlayerCanvas > UI > Legacy > Text > Name 으로 설정
+
+위치값 0, 0.5, 0
+      5, 0.5
+
+근대 잘 안보이게됨
+
+PlayerCanvas > Canvas Scaler > Dynamic Pixels Per Unit 값 1500 설정
+
+다시 Name 으로 가서 Text 를 Player Name 설정 > Font : xirod > 가운데정렬
+> 색 원하는 색상 
+
+UI 에 RayCast Target 이 있는데 RayCast 효과를 받을지 말지 적용하는것
+
+
+작동하면 플레이어 따라 UI가 회전하게됨
+Canvas 가 카메라를 보게 스크립트를 만들어줄거임
+
+PlayerCanvas 에 Billboard 스크립트 생성
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class Billboard : MonoBehaviour
+{
+    private Transform target;
+
+    private void Start()
+    {
+        target = Camera.main.transform;
+    }
+
+    private void LateUpdate()
+    {
+        // target.foward : 카메라가 바라보는 방향 , target.up : 세워서 보게 설정
+        transform.rotation = Quaternion.LookRotation(target.forward, target.up);
+    }
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+카메가 천천히 따라가게 스크립트 만들기
+
+Main Camera 오브젝트에 Follow 스크립트 생성
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class Follow : MonoBehaviour
+{
+    public GameObject target;
+    public float distance;
+    public float height;
+    public float speed;
+
+    private Vector3 pos;
+
+    private void Update()
+    {
+        // pos 목적지 위치 구하기 (플레이어 x 값, 카메라의 높이, 플레이어 z위체에서 어느정도 거리 만큼 띄움)
+        pos = new Vector3(
+            target.transform.position.x,
+            height,
+            target.transform.position.z - distance);
+
+        // 목적지 까지 일정 거리의 벡터구하기 (노말라이즈 생각하면 편함)
+        // (카메라 위치, 목적지위치, 일정거리(이동할 거리))
+        transform.position = Vector3.Lerp(
+            transform.position,
+            pos,
+            speed * Time.deltaTime);
+    }
+}
+
+
+
+target 에 Player 오브젝트 참조 연결
+
+Distance : 5
+Hdight   : 8
+Speed    : 2
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+적 오브젝트 추가
+
+프로젝트뷰 AngryBots > Enemy > Prefab > Dude
+
+Animation Controller 비어있음
+
+프로젝트뷰 AngryBots > Enemy > Animation > Idle > Dude 오브젝트에 넣기
+
+Dude 오브젝트 클릭후 애니메이터 뷰 에 Idle 들어갔는지 확인
+> Run 애니메이션 을 애니메이터뷰에 드래그 로 넣기
+
+애니메이션 넣는다고 다 적용되는것이 아님, 아바타가 맞아야함
+
+Idle 애니메이션과 Run 애니메이션 서로 트랜지션 설정
+
+애니메이터 뷰 에서 파라메터 Bool 타입의 run 만들기
+
+Idle > Run 방향 파라매터 에 Has Exit Time 체크 해제 run 파라매터 추가 값 true
+Run > Idle 방향 파라매터 에 Has Exit Time 체크 해제 run 파라매터 추가 값 false
+
+Attack 애니메이션 추가
+
+파라매터 Trigger 타입의 attack 추가
+
+Run > attack 방향 파라매터 에 Has Exit Time 체크 해제 attack 파라매터 추가
+attack > Run 방향 파라매터 에 Has Exit Time 체크 컨디션 추가 없음
+
+Hurt 애니메이션 추가
+
+Hurt 에 Idle, Run, 애니메이션 과 양방향 트랜지션, Attack 에서 Hurt 로 트랜지션 생성
+전부 Has Exit Time 체크 해제
+
+Trigger 타입의 hurt 파라매터 추가 > Hurt 로 가는 Idle, Run, Attack 트랜지션에 넣기
+
+Hurt 에서 Idle 애니메이션 으로 가는 트랜지션 에는 컨디션 run 을 false 값
+Has Exit Time 체크
+Hurt 에서 Run 애니메이션 으로 가는 트랜지션 에는 컨디션 run 을 true 값
+Has Exit Time 체크
+
+Die 애니메이션 추가
+Hurt 에서 Die 로 트랜지션 추가 Has Exit Time 체크 해제
+Trigger 타입의 die 파라매터 추가 하고 컨디션 추가
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+애니메이션 작동하게 스크립트 추가
+
+Enemy 스크립트 생성
+
+Dude 오브젝트에 넣기
+
+스크립트 수정
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public enum EnemyState
+{
+    Idle,
+    Move,
+    Attack,
+    Hurt,
+    Die
+}
+
+public class Enemy : MonoBehaviour
+{
+    public EnemyState enemyState;
+
+    public Animator anim;
+
+    private float speed;
+    public float moveSpeed;
+    public float attackSpeed;
+
+    public float findRange;
+    public float damage;
+    public Transform player;
+
+    private void Update()
+    {
+        if (enemyState == EnemyState.Idle)
+        {
+            DistanceCheck();
+        }
+        else if (enemyState == EnemyState.Move)
+        {
+            MoveUpdate();
+        }
+    }
+
+    private void DistanceCheck()
+    {
+        // 플레이어 와 적 오브젝트의 거리가 범위 보다 클때
+        float distance = Vector3.Distance(player.position, transform.position);
+        if (distance >= findRange)
+        {
+            enemyState = EnemyState.Idle;
+            anim.SetBool("run", false);
+            speed = 0;
+        }
+        // 거리가 범위보다 작을때
+        else
+        {
+            enemyState = EnemyState.Move;
+            anim.SetBool("run", true);
+            speed = moveSpeed;
+        }
+    }
+
+    private void MoveUpdate()
+    {
+        // 플레이어 의 y 값으로 하면 플레이어가 위쪽에 있을 때 기울어져서 바라봄
+        transform.rotation = Quaternion.LookRotation(
+            new Vector3(player.position.x, transform.position.y, player.position.z)
+            - transform.position);
+
+        transform.Translate(Vector3.forward * speed * Time.deltaTime);
+    }
+
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+공격 애니메이션 추가 하기
+
+// 변경된 부분
+private void Update()
+    {
+        if (enemyState == EnemyState.Idle)
+        {
+            DistanceCheck();
+        }
+        else if (enemyState == EnemyState.Move)
+        {
+            MoveUpdate();
+            AttackRangeCheck();
+        }
+    }
+
+    // 추가된 메소드
+    private void AttackRangeCheck()
+    {
+        float distance = Vector3.Distance(player.position, transform.position);
+		// 공격중인 상태가 아닐때 입력 중복 안되게 하기 위해서
+        if (distance < 1.5f && enemyState != EnemyState.Attack)
+        {
+            speed = 0;
+            enemyState = EnemyState.Attack;
+            anim.SetTrigger("attack");
+        }
+    }
+
+
+이렇게 되면 공격 한번만 하고 더이상 공격 안함(Attack 상태에서 다른 상태로 변하지 않기때문)
+
+애니메이션 뷰 추가 한뒤 Dude 오브젝트 클릭 > Samples 옆에 Add event 선택(한번만 누르기)
+새로 생긴 작은 바 클릭 후 Function 에 DistanceCheck() 메소드 실행 시키기
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+적 체력바 만들기
+
+PlayerCanvas 를 복사한뒤 Dude 에 넣은후 EnemyCanvas 로 이름 변경
+
+위치 0, 2, 0 로 설정
+
+EnemyCanvas > Name > 텍스트 설정
+
+EnemyCanvas > LifeBar > FillArea > Fill > 설정
+
+Enemy 스크립트 열기
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+
+public enum EnemyState
+{
+    Idle,
+    Move,
+    Attack,
+    Hurt,
+    Die
+}
+
+public class Enemy : MonoBehaviour
+{
+    public EnemyState enemyState;
+
+    public Animator anim;
+
+    private float speed;
+    public float moveSpeed;
+    public float attackSpeed;
+
+    public float findRange;
+    public float damage;
+    public Transform player;
+
+    private AudioSource audioSrc;
+    public AudioClip hitSound;
+    public AudioClip deathSound;
+    public Transform fxPoint;
+    public GameObject hitFx;
+
+    public GameObject guiPivot;
+    public Slider lifeBar;
+    public float maxHp;
+    public float hp;
+
+    private void Start()
+    {
+        audioSrc = GetComponent<AudioSource>();
+    }
+
+    private void Update()
+    {
+        if (enemyState == EnemyState.Idle)
+        {
+            DistanceCheck();
+        }
+        else if (enemyState == EnemyState.Move)
+        {
+            MoveUpdate();
+            AttackRangeCheck();
+        }
+    }
+
+    private void AttackRangeCheck()
+    {
+        float distance = Vector3.Distance(player.position, transform.position);
+        if (distance < 1.5f && enemyState != EnemyState.Attack)
+        {
+            speed = 0;
+            enemyState = EnemyState.Attack;
+            anim.SetTrigger("attack");
+        }
+    }
+
+    private void DistanceCheck()
+    {
+        // 플레이어 와 적 오브젝트의 거리가 범위 보다 클때
+        float distance = Vector3.Distance(player.position, transform.position);
+        if (distance >= findRange)
+        {
+            enemyState = EnemyState.Idle;
+            anim.SetBool("run", false);
+            speed = 0;
+        }
+        // 거리가 범위보다 작을때
+        else
+        {
+            enemyState = EnemyState.Move;
+            anim.SetBool("run", true);
+            speed = moveSpeed;
+        }
+    }
+
+    private void MoveUpdate()
+    {
+        // 플레이어 의 y 값으로 하면 플레이어가 위쪽에 있을 때 기울어져서 바라봄
+        transform.rotation = Quaternion.LookRotation(
+            new Vector3(player.position.x, transform.position.y, player.position.z)
+            - transform.position);
+
+        transform.Translate(Vector3.forward * speed * Time.deltaTime);
+    }
+
+    public void Hurt(float damage)
+    {
+        if (hp > 0)
+        {
+            enemyState = EnemyState.Hurt;
+            speed = 0;
+            anim.SetTrigger("hurt");
+
+            GameObject fx = Instantiate(
+                hitFx, fxPoint.position, Quaternion.LookRotation(fxPoint.forward));
+
+            hp -= damage;
+            lifeBar.value = hp / maxHp;
+
+            audioSrc.clip = hitSound;
+            audioSrc.Play();
+        }
+
+        if (hp <= 0)
+        {
+            Death();
+        }
+    }
+
+    public void Death()
+    {
+        enemyState = EnemyState.Die;
+        anim.SetTrigger("die");
+        speed = 0;
+
+        guiPivot.SetActive(false);
+        audioSrc.clip = deathSound;
+        audioSrc.Play();
+    }
+}
+
+
+Fx Point 는 듀드오브젝트 자식 오브젝트 에 있음
+
+HitFx 는 AngryBots > Effect > Spark 프리팹(스크립트 없어서 작옹은 안됨)
+
+Sound 들은 AngryBots > Sounds > mobA 쪽 sound 넣기
+
+GuiPivot 은 EnemyCanvas 넣기
+
+LifeBar 에는 EnemyCanvas > LifeBar 넣기
+
+Max Hp 와 Hp 둘다 100
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Bullet 스크립트 열기
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class Bullet : MonoBehaviour
+{
+    public float speed;
+    public float power;
+    public float life;
+
+    private void Start()
+    {
+        Destroy(gameObject, life);
+    }
+
+    private void Update()
+    {
+        /* 위의 Destroy 코드 와 같은 코드
+        life -= Time.deltaTime;
+        if (life <= 0)
+        {
+            Destroy(gameObject);
+        }
+        */
+
+        transform.Translate(Vector3.forward * speed * Time.deltaTime);
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        Destroy(gameObject);
+
+        if (collision.gameObject.tag == "Enemy")
+        {
+            Enemy enemy = collision.gameObject.GetComponent<Enemy>();
+
+            if (enemy.enemyState != EnemyState.Die)
+            {
+                enemy.Hurt(power);
+            }
+        }
+    }
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Sparks 이펙트 정상작동 하게 만들기
+Sparks 프리팹의 Missing 스크립트 제거후 TimedObjectDestructor 스크립트 생성
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class TimedObjectDestructor : MonoBehaviour
+{
+    float timeOut = 1f;
+
+    private void Start()
+    {
+        // Destroy(gameObject, 1f); 같은 코드
+        Invoke("DestroyNow", timeOut);
+    }
+
+    void DestroyNow()
+    {
+        Destroy(gameObject);
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+Spark 프리팹에 3D Object > Quad 생성 후 Collider 컴포넌트 제거
+Mesh Renderer 에 Spark Matetials 넣기
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Hurt 상태에서 Idle 이나 Run 으로 돌아오는 상태가 없음
+
+Hurt 애니메이션에 20 프레임 정도 에서 Add event 한후 DistanceCheck() 호출
+
+죽는 애니메이션이 너무 길으니 애니메이터뷰 에서 Die 애니메이션 Speed 값 조정
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+프로젝트뷰 에서 Prefabs 폴더 만든 뒤 오리지널로 프리팹 저장
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+새로운 적 생성
+
+Teddy 프리팹 을 하이어라키 뷰 에 넣기
+
+Teddy 오브젝트의 애니메이터 컨트롤러 가 없으니 Dude 의 컨트롤러 넣기
+
+Dude 의 EnemyCanvas 복제 > Teddy 의 자식 오브젝트로 넣기
+
+위치값 0, 2.5, 0 으로
+Name 원하는 이름 으로 텍스트 수정
+
+Teddy 에 Enemy 스크립트 넣은 후 참조연결
+
+Anim : Teddy 오브젝트 연결
+Move Speed : 4
+Attack Speed : 0
+Find Range : 10
+Damage : 12
+Player : Player 오브젝트 연결
+Hit Sound : Mob_b_Hit
+Death Sound : Mob_b_Death
+Fx Point : Teddy 의 자식 오브젝트 FX_Point 연결
+Hit Fx : Sparks 연결
+Gui Pivot : Teddy 의 자식오브젝트 EnemyCanvas 연결
+LifeBar : EnemyCanvas 자식오브젝트 LifeBar 연결
+Max Hp : 150
+Hp : 150
+
+Teddy 의 Audio Source 컴포넌트 넣기
