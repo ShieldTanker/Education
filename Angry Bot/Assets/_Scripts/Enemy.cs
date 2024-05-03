@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public enum EnemyState
 {
@@ -24,6 +25,22 @@ public class Enemy : MonoBehaviour
     public float findRange;
     public float damage;
     public Transform player;
+
+    private AudioSource audioSrc;
+    public AudioClip hitSound;
+    public AudioClip deathSound;
+    public Transform fxPoint;
+    public GameObject hitFx;
+
+    public GameObject guiPivot;
+    public Slider lifeBar;
+    public float maxHp;
+    public float hp;
+
+    private void Start()
+    {
+        audioSrc = GetComponent<AudioSource>();
+    }
 
     private void Update()
     {
@@ -78,4 +95,39 @@ public class Enemy : MonoBehaviour
         transform.Translate(Vector3.forward * speed * Time.deltaTime);
     }
 
+    public void Hurt(float damage)
+    {
+        if (hp > 0)
+        {
+            enemyState = EnemyState.Hurt;
+            speed = 0;
+            anim.SetTrigger("hurt");
+
+            GameObject fx = Instantiate(
+                hitFx, fxPoint.position, Quaternion.LookRotation(fxPoint.forward));
+
+            hp -= damage;
+            // 슬라이더 MaxValue 값 바꿔도 상관없음 여기선 비율로 처리함
+            lifeBar.value = hp / maxHp;
+
+            audioSrc.clip = hitSound;
+            audioSrc.Play();
+        }
+
+        if (hp <= 0)
+        {
+            Death();
+        }
+    }
+
+    public void Death()
+    {
+        enemyState = EnemyState.Die;
+        anim.SetTrigger("die");
+        speed = 0;
+
+        guiPivot.SetActive(false);
+        audioSrc.clip = deathSound;
+        audioSrc.Play();
+    }
 }
