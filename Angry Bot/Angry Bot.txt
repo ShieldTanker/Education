@@ -516,7 +516,7 @@ IEnumerator Shot()
 
  하이어라키뷰 UI > Canvas > PlayerCanvas 로 이름변경
 >캔바스를 오브젝트처럼 화면에 배치 시키기
- > Cancas 컴포넌트 Render Mod Screen Space - OverRay 를 > World Space 로 변경
+ > Canvas 컴포넌트 Render Mod Screen Space - OverRay 를 > World Space 로 변경
 > Event Camera 를 메인 카메라로 참조 연결
 
 프로젝트뷰 GUI > Round > Texture Type Sprite (2d and UI) 로 변경
@@ -1101,3 +1101,324 @@ Max Hp : 150
 Hp : 150
 
 Teddy 의 Audio Source 컴포넌트 넣기
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Player 체력 구현
+
+PlayerController 스크립트
+
+using UnityEngine.UI 추가
+
+    // 플레이어 체력 관련 필드
+    public Slider lifeBar;
+    public float maxHp;
+    public float hp;
+	
+	// 업데이트 메소드 수정
+	// 죽어도 계속 업데이트 하기에 idle 상태로 다시 변함
+	    private void Update()
+    {
+        if (playerState != PlayerState.Dead)
+        {
+            KeyboardInput();
+            LookUpdate();
+        }
+        AnimationUpdate();
+    }
+	
+	
+	// 메소드 추가
+    public void Hurt(float damage)
+    {
+        if (hp > 0)
+        {
+            hp -= damage;
+            lifeBar.value = hp / maxHp;
+        }
+
+        if (hp <= 0)
+        {
+            speed = 0;
+            playerState = PlayerState.Dead;
+        }
+    }
+	
+
+Enemy 스크립트 수정
+
+메소드 추가
+
+    public void AttackOn()
+    {
+        PlayerController pc = player.GetComponent<PlayerController>();
+        pc.Hurt(damage);
+    }
+	
+아무 Enemy 오브젝트 의 공격 애니메이션 에서 10프레임쯤 에서 Add event 추가
+에니메이션 이벤트에 AttackOn() 추가
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+게임 오버시 출력
+
+하이어라키 UI > Canvas (이미 체력바로 Canvas 가 있음으로 새로만들어줘야 함)
+
+Canvas 자식오브젝트 Text(Legacy) > 앵커프리셋 탑 레프트
+
+위치값 10, -10, 0
+      300, 30
+
+피벗 0, 1
+	  
+Time 00:00
+
+폰트 xirod
+
+
+
+LimitTime 복제후 이름 EnemyCount
+
+앵커프리셋 탑 라이트 
+위치값 -10, -10, 0
+      300, 30
+
+피벗  1, 1	  
+
+텍스트 Enemy 00 , 오른쪽 정렬
+
+Canvas > 빈 오브젝트 추가 > FinalGUI 이름 변경
+하이어라키뷰 에서 빈오브젝트만들고 넣은것과 Canvas 에서 빈오브젝트 생성은 다름
+
+하이어라키뷰 > 빈오브젝트(유닛단위 위치값)
+Canvas > 빈오브젝트 (픽셀단위 위치값)
+
+FinalGUI 앵커프리셋 스트래치 스트래치
+위치값 전부 0 으로
+
+LimitTime 복사후 Message 로 변경 > FinalGUI 의 자식오브젝트로 넣기
+
+앵커프리셋 센터 미들
+
+위치값 0, 110, 0
+     400, 50
+	 
+피벗 0.5 , 0.5
+
+텍스트 CLEAR!
+폰트 xirod
+크기 40
+
+중앙 정렬
+
+
+
+FinalGUI 에 UI > Panel 추가(자동으로 부모 오브젝트크기만큼 자동 설정)
+색상 검정 으로 한뒤 투명도만 설정
+
+문제발생 > 게임 배경 바깥쪽에 흰줄이 나옴 > Background 판넬의
+소스 이미지가 있어 생긴 문제 > 소스이미지 Dellete 키로삭제
+
+
+
+
+Message 복사 후 FinalScoreText 로 변경
+위치값 0, 70, 0
+     200, 20
+	 
+텍스트 Final Score
+
+
+Message 복사후 FinalScore 로 변경
+위치값 0, 20, 0
+      400, 60
+	 
+텍스트 0
+
+
+FinalGUI 자식오브젝트 UI > Legacy > Button > ReplayBtn 으로 변경
+
+프로젝트뷰 GUI_Texture 의 Round 이미지를 ReplayBtn 의 소스 이미지로 넣기
+ReplayBtn 의 자식 오브젝트 텍스트 > 텍스트 Replay > 폰트 xirod > 사이즈 12
+
+ReplayBtn 복제 QuitBtn 으로 변경
+
+위치값 0, -80, 0
+       120, 30
+	   
+텍스트 Quit
+
+
+하이어라키뷰 > 빈오브젝트 > PlayManager 로 변경 > PlayManager 스크립트 추가
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.SceneManagement;
+
+public class PlayManager : MonoBehaviour
+{
+    // 플레이 상태 관련
+    public bool playEnd;
+    public float limitTime;
+    public int enemyCount;
+
+    public Text timeLabel;
+    public Text enemyLabel;
+    public GameObject finalGUI;
+    public Text finalMessage;
+    public Text finalScoreLabel;
+    public PlayerController pc;
+
+    private void Start()
+    {
+        enemyLabel.text = string.Format("Enemy {0}", enemyCount);
+        UpdateTimeLabel();
+    }
+    private void Update()
+    {
+        if (playEnd)
+            return;
+
+        if (limitTime > 0)
+        {
+            limitTime -= Time.deltaTime;
+            UpdateTimeLabel();
+        }
+        else
+        {
+            limitTime = 0;
+            UpdateTimeLabel();
+            GameOver();
+        }
+    }
+
+    // 적 전부 제거시 호출
+    public void Clear()
+    {
+        if (playEnd)
+            return;
+
+        // 게임 속도
+        Time.timeScale = 0;
+        
+        playEnd = true;
+        finalMessage.text = "CLEAR!!";
+
+        // PlayerController pc = GameObject.Find("Player").GetComponent<PlayerController>();
+
+        float score = 12345f + limitTime * 123f + pc.hp * 123f;
+        finalScoreLabel.text = string.Format("{0:N0}", score);
+
+        finalGUI.SetActive(true);
+
+    }
+
+    // 게임오버시 호출
+    public void GameOver()
+    {
+        if (playEnd)
+            return;
+
+        Time.timeScale = 0;
+
+        playEnd = true;
+        finalMessage.text = "Fail...";
+
+        // 남은 적 수 만큼 점수 제거
+        float score = 1234f - enemyCount * 123f;
+        finalScoreLabel.text = string.Format("{0:N0}", score);
+
+        finalGUI.SetActive(true);
+
+        // 시간초과 되어도 사격가능한 버그 수정
+        pc.playerState = PlayerState.Dead;
+    }
+    private void UpdateTimeLabel()
+    {
+        timeLabel.text = string.Format("Time : {0:N2}", limitTime);
+    }
+
+    public void EnemyDie()
+    {
+        enemyCount--;
+        enemyLabel.text = string.Format("Enemy : {0}", enemyCount);
+
+        if (enemyCount <= 0)
+            Clear();
+    }
+
+    public void Replay()
+    {
+        Time.timeScale = 1f;
+        SceneManager.LoadScene("MainPlay");
+    }
+
+    public void Quit()
+    {
+        Time.timeScale = 1f;
+        // 지금 해당 씬은 없고 나중에 만들예정
+        SceneManager.LoadScene("Title");
+    }
+}
+
+
+PlayManager 참조연결
+LimitTime = 60
+EnemyCount = 맵에 있는 적들 수만큼
+TimeLabel = LimitTime 오브젝트
+EnemyLabel = EnemyCount 오브젝트
+FinalGUI = FinalGUI 오브젝트
+FinalMessage = Message 텍스트
+Final Score Label = FinalScore(Text)
+Pc = Player(PlayerController)
+
+
+ReplayBtn 의 OnClick() 에 PlayManager 오브젝트 참조 연결 후
+> Replay()호출
+
+QuitBtn 의 OnClick() 에 PlayManager 오브젝트 참조 연결 후
+> Quit() 호출 (지금은 Title 씬이 없어서 오류남)
+
+
+Enemy 스크립트 Death() 메소드 수정
+
+public void Death()
+    {
+        enemyState = EnemyState.Die;
+        anim.SetTrigger("die");
+        speed = 0;
+
+        guiPivot.SetActive(false);
+        audioSrc.clip = deathSound;
+        audioSrc.Play();
+
+        // 에너미 가 죽었을떄 플레이 매니저 의 EnemyDie() 메소드 호출
+        PlayManager pm = GameObject.Find("PlayManager").GetComponent<PlayManager>();
+        pm.EnemyDie();
+    }
+	
+	
+PlayerController 스크립트 Hurt() 메소드 수정
+
+    public void Hurt(float damage)
+    {
+        if (hp > 0)
+        {
+            hp -= damage;
+            lifeBar.value = hp / maxHp;
+        }
+
+        if (hp <= 0)
+        {
+            speed = 0;
+            playerState = PlayerState.Dead;
+            
+			// 플레이어 hp 가 0 이하 일때
+            PlayManager pm = GameObject.Find("PlayManager").GetComponent<PlayManager>();
+            pm.GameOver();
+        }
+    }

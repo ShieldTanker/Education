@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 
 // 플레이어 의 현재 상태 확인용
@@ -35,6 +36,11 @@ public class PlayerController : MonoBehaviour
     public AudioClip shotSound;
     private AudioSource audioSrc;
 
+    // 플레이어 체력 관련
+    public Slider lifeBar;
+    public float maxHp;
+    public float hp;
+
     private void Start()
     {
         // 변수          열거형
@@ -46,9 +52,11 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
-        KeyboardInput();
-        LookUpdate();
-
+        if (playerState != PlayerState.Dead)
+        {
+            KeyboardInput();
+            LookUpdate();
+        }
         AnimationUpdate();
     }
 
@@ -143,5 +151,23 @@ public class PlayerController : MonoBehaviour
 
         yield return new WaitForSeconds(0.15f);
         playerState = PlayerState.Idle;
+    }
+
+    public void Hurt(float damage)
+    {
+        if (hp > 0)
+        {
+            hp -= damage;
+            lifeBar.value = hp / maxHp;
+        }
+
+        if (hp <= 0)
+        {
+            speed = 0;
+            playerState = PlayerState.Dead;
+            
+            PlayManager pm = GameObject.Find("PlayManager").GetComponent<PlayManager>();
+            pm.GameOver();
+        }
     }
 }

@@ -129,5 +129,14 @@ public class Enemy : MonoBehaviour
         guiPivot.SetActive(false);
         audioSrc.clip = deathSound;
         audioSrc.Play();
+
+        PlayManager pm = GameObject.Find("PlayManager").GetComponent<PlayManager>();
+        pm.EnemyDie();
+    }
+
+    public void AttackOn()
+    {
+        PlayerController pc = player.GetComponent<PlayerController>();
+        pc.Hurt(damage);
     }
 }
