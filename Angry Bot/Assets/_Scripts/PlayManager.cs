@@ -18,10 +18,14 @@ public class PlayManager : MonoBehaviour
     public Text finalScoreLabel;
     public PlayerController pc;
 
+    public Text playerName;
+
     private void Start()
     {
         enemyLabel.text = string.Format("Enemy {0}", enemyCount);
         UpdateTimeLabel();
+
+        playerName.text = PlayerPrefs.GetString("UserName");
     }
     private void Update()
     {
@@ -60,6 +64,8 @@ public class PlayManager : MonoBehaviour
 
         finalGUI.SetActive(true);
 
+        BestCheck(score);
+
     }
 
     // 게임오버시 호출
@@ -81,6 +87,8 @@ public class PlayManager : MonoBehaviour
 
         // 시간초과 되어도 사격가능한 버그 수정
         pc.playerState = PlayerState.Dead;
+
+        BestCheck(score);
     }
     private void UpdateTimeLabel()
     {
@@ -107,5 +115,17 @@ public class PlayManager : MonoBehaviour
         Time.timeScale = 1f;
         // 지금 해당 씬은 없고 나중에 만들예정
         SceneManager.LoadScene("Title");
+    }
+
+    public void BestCheck(float score)
+    {
+        float bestScore = PlayerPrefs.GetFloat("BestScore");
+
+        if (score > bestScore)
+        {
+            PlayerPrefs.SetFloat("BestScore", score);
+            PlayerPrefs.SetString("BestPlayer", PlayerPrefs.GetString("UserName"));
+            PlayerPrefs.Save();
+        }
     }
 }

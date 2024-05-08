@@ -1422,3 +1422,270 @@ PlayerController 스크립트 Hurt() 메소드 수정
             pm.GameOver();
         }
     }
+	
+	
+	
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+배경음악 넣기
+
+프로젝트뷰 AngryBots > Sounds > BGM 을 하이어라키뷰 에 끌어 넣어 오브젝트로 만들기
+
+BGM 오브젝트의 오디오 소스 컴포넌트 Loop 활성화
+
+게임 오버시 소리 재생
+Sounds 에서 Final_GUI 사운드를 FinalGUI 오브젝트에 넣기
+
+게임 시작시 소리 재생(Loop X)
+Sounds 에서 Openinig 을 오브젝트로 만들기
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+타이틀 씬 만들기
+
+MainPlay 씬 복제후 이름을 Title 로 변경 후 열기
+
+PlayManager, Enemys 삭제, Canvas > LimitTime, EnemyCount 삭제
+
+FinalGUI 활성화, FinalScore, FinalScoreText 제거
+
+Message 텍스트 ANGRY BOT 으로 변경
+
+ReplayBtn 을 BestScoreBtn 으로 변경, 가로크기 200 으로 변경
+BestScoreBtn 의 자식오브젝트 Text 의 텍스트 Best Score 로 변경
+
+QuitBtn 가로크기 200 으로 변경
+
+BestScoreBtn 복제후 StartBtn 으로 변경 y위치 0 으로
+StartBtn 의 자식오브젝트 텍스트 Start 로 변경
+
+
+Player 오브젝트의 스크립트 비활성화
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+FinalGUI 의 자식오브젝트 로 UI > Legacy > InputField > NameInput 으로 변경
+위치값 0, 40, 0
+       260, 30
+	   
+프로젝트뷰 GUI_Textures > Dark 이미지 나인 슬라이스 4,4,4,4 로 나누기
+
+NameInput 오브젝트에 이미지 컴포넌트 소스이미지 에 넣기
+
+색상 47,	177, 255, 255 로 적용
+
+
+글자 입력칸 텍스트 보이게 하기
+Placeholder 의 텍스트칸 Type Your Name 으로 변경
+폰트 적용 후 사이즈 14 가운데 상단 정렬, 색상 79, 255, 226, 128 로 변경
+
+실제 입력되는 텍스트 표시
+NameInput > Text > 폰트 설정, 가운데 상단 정렬, 색상 79, 255, 226, 255 로 변경
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Player 오브젝트 의 자식오브젝트 PlayerCanvas 제거
+
+카메라 무브 만들기
+
+MainCamera 오브젝트 Follow 스크립트 비활성화 후 RotateAround 스크립트 생성
+
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class RotateAround : MonoBehaviour
+{
+    public Transform target;
+    public float speed;
+
+    private void Update()
+    {
+        // 위치 기준으로 y축(0,1,0) 으로 왼쪽(-speed)으로 회전
+        transform.RotateAround(target.position, Vector3.up, -speed * Time.deltaTime);
+    }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+최고점수 출력
+
+FinalGUI > UI > Legacy > Text > BestScoreTxt 로 변경
+
+위치값 110, -40, 0
+      160, 30
+피벗 0 , 0.5
+
+텍스트 임시로 Player : 99999
+
+폰트 설정 및 크기 11 좌측 가운데 정렬
+색상 79, 255, 226, 255
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Canvas 에 TitleManager 생성
+
+플레이어 이름 넘겨주기
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.SceneManagement;
+
+public class TitleManager : MonoBehaviour
+{
+    public InputField nameInput;
+    public GameObject bestData;
+    public Text bestUserData;
+
+    public void GoPlay()
+    {
+        PlayerPrefs.SetString("UserName", nameInput.text);
+        PlayerPrefs.Save();
+        SceneManager.LoadScene("MainPlay");
+    }
+
+    public void QuitGame()
+    {
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
+    }
+}
+
+
+
+Canvas 참조연결 
+
+Name Input : NameInput
+Best Data : BestScoreTxt
+Best User Data : BestScoreTxt
+
+Canvas > StartBtn 참조연결
+Canvas 넣고 GoPlay() 메소드 호출
+
+Canvas > QuitBtn 참조연결
+Canvas 넣고 QuitGame() 메소드 호출
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+MainPlay 씬 열기
+
+PlayManager 스크립트 수정
+
+    //추가
+    public Text playerName;
+	
+	// 스타트 메소드 코드 추가
+	    private void Start()
+    {
+        enemyLabel.text = string.Format("Enemy {0}", enemyCount);
+        UpdateTimeLabel();
+
+        playerName.text = PlayerPrefs.GetString("UserName");
+    }
+
+PlayManager 오브젝트 참조연결
+
+PlayerName : Player 오브젝트 > PlayerCanvas > Name
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+최고점수 구현
+
+PlayManager 스크립트 수정
+
+메소드 추가
+
+    public void BestCheck(float score)
+    {
+        float bestScore = PlayerPrefs.GetFloat("BestScore");
+
+        if (score > bestScore)
+        {
+            PlayerPrefs.SetFloat("BestScore", score);
+            PlayerPrefs.SetString("BestPlayer", PlayerPrefs.GetString("UserName"));
+            PlayerPrefs.Save();
+        }
+    }
+	
+	
+PlayManager 의 Clear() 와 GameOver() 에 메소드 넣기
+
+    // 적 전부 제거시 호출
+    public void Clear()
+    {
+        if (playEnd)
+            return;
+
+        // 게임 속도
+        Time.timeScale = 0;
+        
+        playEnd = true;
+        finalMessage.text = "CLEAR!!";
+
+        // PlayerController pc = GameObject.Find("Player").GetComponent<PlayerController>();
+
+        float score = 12345f + limitTime * 123f + pc.hp * 123f;
+        finalScoreLabel.text = string.Format("{0:N0}", score);
+
+        finalGUI.SetActive(true);
+
+        BestCheck(score);
+
+    }
+
+    // 게임오버시 호출
+    public void GameOver()
+    {
+        if (playEnd)
+            return;
+
+        Time.timeScale = 0;
+
+        playEnd = true;
+        finalMessage.text = "Fail...";
+
+        // 남은 적 수 만큼 점수 제거
+        float score = 1234f - enemyCount * 123f;
+        finalScoreLabel.text = string.Format("{0:N0}", score);
+
+        finalGUI.SetActive(true);
+
+        // 시간초과 되어도 사격가능한 버그 수정
+        pc.playerState = PlayerState.Dead;
+
+        BestCheck(score);
+    }
+	
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+BestScore 출력
+
+TitleManager 스크립트 수정
+
+GoPlay() 메소드와 QuitGame() 메소드 사이에 새로운 메소드 추가
+    
+    public void BestScore()
+    {
+	    // 플레이어 프리팹의 키값이 있을때만 메소드 실행
+        if (!PlayerPrefs.HasKey("BestPlayer"))
+            return;
+
+        bestUserData.text = string.Format(
+           "{0} : {1:N0}",
+           PlayerPrefs.GetString("BestPlayer"),
+           PlayerPrefs.GetFloat("BestScore"));
+
+        bestData.SetActive(true);
+    }
+	
+	
+Canvas > FinalGUI > BestScoreBtn 에 OnClick() 에 Canvas 연결
+> TitleManager > BestScore() 호출
