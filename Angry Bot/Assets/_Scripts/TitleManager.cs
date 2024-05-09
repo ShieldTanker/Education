@@ -7,28 +7,39 @@ using UnityEngine.SceneManagement;
 public class TitleManager : MonoBehaviour
 {
     public InputField nameInput;
-    public GameObject bestData;
-    public Text bestUserData;
+    public GameObject[] bestData;
+    public Text[] bestUserData;
 
+    private void Start()
+    {
+        // PlayerPrefs.DeleteAll();
+    }
     public void GoPlay()
     {
-        PlayerPrefs.SetString("UserName", nameInput.text);
-        PlayerPrefs.Save();
-        SceneManager.LoadScene("MainPlay");
+        // 연습문제 1. 이름입력 없을시 게임 시작 x
+        if (nameInput.text != "")
+        {
+            PlayerPrefs.SetString("UserName", nameInput.text);
+            PlayerPrefs.Save();
+            SceneManager.LoadScene("MainPlay");
+        }
     }
 
     public void BestScore()
     {
         // 플레이어 프리팹 에 키값이 있을때만 메소드 실행
-        if (!PlayerPrefs.HasKey("BestPlayer"))
+        if (!PlayerPrefs.HasKey("0BestName"))
             return;
 
-        bestUserData.text = string.Format(
-           "{0} : {1:N0}",
-           PlayerPrefs.GetString("BestPlayer"),
-           PlayerPrefs.GetFloat("BestScore"));
-
-        bestData.SetActive(true);
+        for (int i = 0; i < 3; i++)
+        {
+            bestUserData[i].text = string.Format(
+               "{0} : {1:N0}\n",
+               PlayerPrefs.GetString(i + "BestName"),
+               PlayerPrefs.GetFloat(i + "BestScore"));
+            
+            bestData[i].SetActive(true);
+        }
     }
 
     public void QuitGame()

@@ -122,6 +122,9 @@ public class Enemy : MonoBehaviour
 
     public void Death()
     {
+        Collider col = gameObject.GetComponent<Collider>();
+        col.enabled = false;
+
         enemyState = EnemyState.Die;
         anim.SetTrigger("die");
         speed = 0;

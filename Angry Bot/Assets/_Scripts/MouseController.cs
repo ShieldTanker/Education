@@ -7,6 +7,7 @@ public class MouseController : MonoBehaviour
     public Transform target;
     public GameObject cursor;
     public PlayerController playerCtrl;
+    public PlayManager pm;
 
     private void Update()
     {
@@ -23,7 +24,7 @@ public class MouseController : MonoBehaviour
             // hit.collider -> 오브젝트의 콜라이더 객체
 
             // 마우스 방향으로 사격
-            if (Input.GetMouseButtonDown(0) && playerCtrl.playerState != PlayerState.Dead)
+            if (Input.GetMouseButtonDown(0) && !pm.playEnd)
             {
                 target.position = new Vector3(hit.point.x, 0f, hit.point.z);
                 playerCtrl.lookDirection = target.position - playerCtrl.transform.position;

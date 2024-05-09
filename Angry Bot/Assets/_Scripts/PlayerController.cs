@@ -9,6 +9,8 @@ public enum PlayerState
 {
     Idle,
     Walk,
+    WalkLeft,
+    WalkRight,
     Run,
     Attack,
     Dead,
@@ -17,6 +19,7 @@ public enum PlayerState
 public class PlayerController : MonoBehaviour
 {
     public PlayerState playerState;
+    public PlayManager pm;
 
     public Vector3 lookDirection;
     public float speed;
@@ -27,6 +30,8 @@ public class PlayerController : MonoBehaviour
     private Animation anim;
     public AnimationClip idleAni;
     public AnimationClip walkAni;
+    public AnimationClip walkLeft;
+    public AnimationClip walkRight;
     public AnimationClip runAni;
 
     // 미사일 발사
@@ -67,7 +72,7 @@ public class PlayerController : MonoBehaviour
 
         if (playerState != PlayerState.Attack)
         {
-            if (xx != 0 || zz != 0)
+            if ((xx != 0 || zz != 0) && (playerState != PlayerState.WalkLeft && playerState != PlayerState.WalkRight))
             {
                 // 맴버 변수 lookDirection = 보는 방향
                 lookDirection = (xx * Vector3.right) + (zz * Vector3.forward);
@@ -80,14 +85,26 @@ public class PlayerController : MonoBehaviour
                     playerState = PlayerState.Run;
                 }
             }
-
             else if (playerState != PlayerState.Idle)
             {
                 playerState = PlayerState.Idle;
                 speed = 0;
             }
 
-            if (Input.GetKeyDown(KeyCode.Space) && playerState != PlayerState.Dead)
+
+            if (Input.GetKey(KeyCode.Q))
+            {
+                playerState = PlayerState.WalkLeft;
+                transform.Translate(Vector3.left * walkSpeed * Time.deltaTime);
+            }
+            else if (Input.GetKey(KeyCode.E))
+            {
+                playerState = PlayerState.WalkRight;
+                transform.Translate(Vector3.right * walkSpeed * Time.deltaTime);
+            }
+
+
+            if (Input.GetKeyDown(KeyCode.Space) && !pm.playEnd)
             {
                 //StartCoroutine("Shot"); , StartCoroutine(Shot()) 과 같음
                 StartCoroutine(nameof(Shot));
@@ -110,15 +127,34 @@ public class PlayerController : MonoBehaviour
         switch (playerState)
         {
             // 애니메이션이 idleAni 안에 들어있는 이름을 가진 애니메이션 으로 0.2초 겹치게 전환
-            case PlayerState.Idle:      anim.CrossFade(idleAni.name,0.2f);
+            case PlayerState.Idle:
+                anim.CrossFade(idleAni.name,0.2f);
                 break;
-            case PlayerState.Walk:      anim.CrossFade(walkAni.name,0.2f);
+
+            case PlayerState.Walk:
+                anim.CrossFade(walkAni.name,0.2f);
+                anim[walkAni.name].speed = 1;
                 break;
-            case PlayerState.Run:       anim.CrossFade(runAni.name,0.2f);
+
+             case PlayerState.WalkLeft:
+                anim.CrossFade(walkLeft.name, 0.2f);
                 break;
-            case PlayerState.Attack:    anim.CrossFade(idleAni.name,0.2f);
+
+            case PlayerState.WalkRight:
+                anim.CrossFade(walkRight.name, 0.2f);
                 break;
-            case PlayerState.Dead:      anim.CrossFade(idleAni.name, 0.2f);
+
+            case PlayerState.Run:
+                anim.CrossFade(runAni.name,0.2f);
+                anim[runAni.name].speed = 2;
+                break;
+
+            case PlayerState.Attack:
+                anim.CrossFade(idleAni.name,0.2f);
+                break;
+
+            case PlayerState.Dead:
+                anim.CrossFade(idleAni.name, 0.2f);
                 break;
         }
     }
