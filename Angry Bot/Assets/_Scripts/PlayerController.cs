@@ -19,9 +19,11 @@ public enum PlayerState
 public class PlayerController : MonoBehaviour
 {
     public PlayerState playerState;
+    PlayerState beforState;
     public PlayManager pm;
 
     public Vector3 lookDirection;
+    Vector3 moveDirection;
     public float speed;
     public float walkSpeed;
     public float runSpeed;
@@ -53,6 +55,8 @@ public class PlayerController : MonoBehaviour
 
         anim = GetComponent<Animation>();
         audioSrc = GetComponent<AudioSource>();
+
+        anim.CrossFade(idleAni.name, 0.2f);
     }
 
     private void Update()
@@ -78,6 +82,7 @@ public class PlayerController : MonoBehaviour
                 lookDirection = (xx * Vector3.right) + (zz * Vector3.forward);
                 speed = walkSpeed;
                 playerState = PlayerState.Walk;
+                moveDirection = Vector3.forward;
 
                 if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
                 {
@@ -85,24 +90,25 @@ public class PlayerController : MonoBehaviour
                     playerState = PlayerState.Run;
                 }
             }
+
+            else if (Input.GetKey(KeyCode.Q))
+            {
+                speed = walkSpeed;
+                playerState = PlayerState.WalkLeft;
+                moveDirection = Vector3.left;
+            }
+            else if (Input.GetKey(KeyCode.E))
+            {
+                speed = walkSpeed;
+                playerState = PlayerState.WalkRight;
+                moveDirection = Vector3.right;
+            }
+
             else if (playerState != PlayerState.Idle)
             {
                 playerState = PlayerState.Idle;
                 speed = 0;
             }
-
-
-            if (Input.GetKey(KeyCode.Q))
-            {
-                playerState = PlayerState.WalkLeft;
-                transform.Translate(Vector3.left * walkSpeed * Time.deltaTime);
-            }
-            else if (Input.GetKey(KeyCode.E))
-            {
-                playerState = PlayerState.WalkRight;
-                transform.Translate(Vector3.right * walkSpeed * Time.deltaTime);
-            }
-
 
             if (Input.GetKeyDown(KeyCode.Space) && !pm.playEnd)
             {
@@ -118,12 +124,15 @@ public class PlayerController : MonoBehaviour
         
         // 바라봐야하는 방향으로 천천히 바라보게 (현재 회전값, 목표 회전값 , 회전할 각도)
         transform.rotation = Quaternion.RotateTowards(transform.rotation, r, 600f * Time.deltaTime);
-
-        transform.Translate(Vector3.forward * speed * Time.deltaTime);
+        
+        transform.Translate(moveDirection * speed * Time.deltaTime);
     }
 
     void AnimationUpdate()
     {
+        if (beforState == playerState)
+            return;
+
         switch (playerState)
         {
             // 애니메이션이 idleAni 안에 들어있는 이름을 가진 애니메이션 으로 0.2초 겹치게 전환
@@ -157,6 +166,8 @@ public class PlayerController : MonoBehaviour
                 anim.CrossFade(idleAni.name, 0.2f);
                 break;
         }
+
+        beforState = playerState;
     }
 
     IEnumerator Shot()

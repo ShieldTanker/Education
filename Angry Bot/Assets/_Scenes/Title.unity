@@ -7358,7 +7358,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 110, y: -40}
-  m_SizeDelta: {x: 160, y: 30}
+  m_SizeDelta: {x: 160, y: 50}
   m_Pivot: {x: 0, y: 0.5}
 --- !u!1001 &374619649
 PrefabInstance:
@@ -14280,10 +14280,9 @@ MonoBehaviour:
   - {fileID: 367482288}
   - {fileID: 1794836540}
   - {fileID: 2070659159}
-  bestUserData:
-  - {fileID: 367482289}
-  - {fileID: 1794836542}
-  - {fileID: 2070659161}
+  teacherBestData: {fileID: 367482288}
+  bestUserDatas: []
+  bestUserData: {fileID: 367482289}
 --- !u!1 &680113634
 GameObject:
   m_ObjectHideFlags: 0
@@ -35262,7 +35261,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 679687100}
         m_TargetAssemblyTypeName: TitleManager, Assembly-CSharp
-        m_MethodName: BestScore
+        m_MethodName: TeachersBestScore
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

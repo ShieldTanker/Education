@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+// 확장 메소드 추가
+using System.Linq;
 
 
 public class PlayManager : MonoBehaviour
@@ -22,11 +24,15 @@ public class PlayManager : MonoBehaviour
 
     // 플레이어 랭킹 관련
     public Text playerName;
-    private float[] bestScore = new float[3];
-    private string[] bestName = new string[3];
+    static public int rankUserCnt = 3;
+    private float[] bestScore;
+    private string[] bestName;
 
     private void Start()
     {
+        bestScore = new float[rankUserCnt];
+        bestName = new string[rankUserCnt];
+
         enemyLabel.text = string.Format("Enemy {0}", enemyCount);
         UpdateTimeLabel();
 
@@ -67,7 +73,8 @@ public class PlayManager : MonoBehaviour
 
         finalGUI.SetActive(true);
 
-        ScoreSet(PlayerPrefs.GetString("UserName"), score);
+        BestCheck(score);
+        // ScoreSet(PlayerPrefs.GetString("UserName"), score);
     }
 
     // 게임오버시 호출
@@ -90,7 +97,8 @@ public class PlayManager : MonoBehaviour
         // 시간초과 되어도 사격가능한 버그 수정
         pc.playerState = PlayerState.Dead;
 
-        ScoreSet(PlayerPrefs.GetString("UserName"),score);
+        BestCheck(score);
+        // ScoreSet(PlayerPrefs.GetString("UserName"),score);
     }
     private void UpdateTimeLabel()
     {
@@ -121,13 +129,48 @@ public class PlayManager : MonoBehaviour
         SceneManager.LoadScene("Title");
     }
 
+    static public User[] GetUsers()
+    {
+        // 본인 정보와 랭크의 정보
+        User[] users = new User[rankUserCnt + 1];
+
+        for (int i = 0; i < rankUserCnt; i++)
+        {
+            string bestName = PlayerPrefs.GetString("BestPlayer" + (i + 1));
+            float bestScore = PlayerPrefs.GetFloat("BestScore" + (i + 1));
+
+            users[i] = new User(bestName, bestScore);
+        }
+        return users;
+    }
+
+    // 강사님 풀이
+    private void BestCheck(float score)
+    {
+        // 본인 정보와 랭크의 정보
+        User[] users = GetUsers();
+
+        string userName = PlayerPrefs.GetString("UserName");
+        users[rankUserCnt] = new User(userName, score);
+
+        // 확장 메소드로 점수기준으로 정렬
+        users = users.OrderByDescending(x => x.score).ToArray();
+
+        for (int i = 0; i < rankUserCnt; i++)
+        {
+            PlayerPrefs.SetString("BestPlayer" + (i + 1), users[i].name);
+            PlayerPrefs.SetFloat("BestScore" + (i + 1), users[i].score);
+        }
+        PlayerPrefs.Save();
+    }
+
     public void ScoreSet(string currentName, float currentScore)
     {
 
         float tmpScore = 0f;
         string tmpName = "";
 
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < rankUserCnt; i++)
         {
             bestName[i] = PlayerPrefs.GetString(i + "BestName");
             bestScore[i] = PlayerPrefs.GetFloat(i + "BestScore");
@@ -147,7 +190,7 @@ public class PlayManager : MonoBehaviour
                 currentName = tmpName;
             }
         }
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < rankUserCnt; i++)
         {
             PlayerPrefs.SetString(i + "BestName", bestName[i]);
             PlayerPrefs.SetFloat(i + "BestScore", bestScore[i]);

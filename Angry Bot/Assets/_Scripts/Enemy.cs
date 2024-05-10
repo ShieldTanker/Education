@@ -68,6 +68,10 @@ public class Enemy : MonoBehaviour
 
     private void DistanceCheck()
     {
+        // 죽은상태 에서 한번 더 호출되어도 무시
+        if (enemyState == EnemyState.Die)
+            return;
+
         // 플레이어 와 적 오브젝트의 거리가 범위 보다 클때
         float distance = Vector3.Distance(player.position, transform.position);
         if (distance >= findRange)
@@ -122,9 +126,6 @@ public class Enemy : MonoBehaviour
 
     public void Death()
     {
-        Collider col = gameObject.GetComponent<Collider>();
-        col.enabled = false;
-
         enemyState = EnemyState.Die;
         anim.SetTrigger("die");
         speed = 0;
@@ -132,6 +133,9 @@ public class Enemy : MonoBehaviour
         guiPivot.SetActive(false);
         audioSrc.clip = deathSound;
         audioSrc.Play();
+
+        Collider col = gameObject.GetComponent<Collider>();
+        col.enabled = false;
 
         PlayManager pm = GameObject.Find("PlayManager").GetComponent<PlayManager>();
         pm.EnemyDie();
