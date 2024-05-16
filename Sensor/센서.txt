@@ -1,0 +1,202 @@
+
+센서 구현
+
+콘 형태의 시야 센서, 구 형태의 센서
+
+콘 형태의 시야 : 간단하고 효율적이지만 제한적인 RayCast 방식을 보완
+               2D 나 3D 모두 사용가능, 간단한 겹침 검사로부터 현실적인 모델까지 다향함
+			   
+구 형태의 센서(소리, 냄새, 느끼기) :
+
+////////////////////////////////////////////////////////////////////////////////////
+
+TankModel Asset 다운 및 임포트( Import )
+
+씬 이름 Sensor 로 변경
+
+3D 오브젝트 Plane 생성, 이름 Floor 로 변경 및 Material 폴더 생성후 마테리얼 생성
+Floor 에 색상 적용
+
+Models 에 있는 Tank 프리팹 을 오브젝트로 생성 , Enemy 로 변경
+
+태그 Enemy 생성 후 적용
+
+Rigidbody 추가 중력 끄기,키네메틱 켜기
+Box Collider 추가  크기 조정
+
+//////////////////////////////////////////////////////////////////////////////////////////
+
+3D 오브젝트 큐브 추가, 이름 Obstacle
+위치값 10, 2, 0
+스케일 ,4 4, 20
+
+마테리얼 만들고 색상 적용
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+센서 넣을 오브젝트
+
+Enemy 오브젝트 복제 후 이름 AI Character 로 변경
+태그 플레이어로 설정
+
+마테리얼 생성 후 AI Character 오브젝트에 적용
+( 씬뷰의 모델링에 끌어다 놓으면 그부위만 색상 변경 가능 )
+
+//////////////////////////////////////////////////////////////////////////////////////////
+
+카메라 탑뷰 처럼 보이게 
+위치값 0 90 0
+회전값 90 0 0
+
+그림자 적게 하기위해 빛의 방향 조정
+위치값 60 0 0
+회전값 90 0 0
+
+빈브젝트 생성 후 Floor 와 Obstacle 넣기, Navigation Static 활성화
+
+Window > AI > Navigation > Bake 탭 
+> Agent Radius 1.5
+  Step Height 0.8 
+
+> Bake  
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+빈오브젝트 생성후 Target 으로 변경
+
+자식오브젝트로 Sphere 생성 스케일 값 3, 3, 3, 마테리얼 생성 후 적용
+
+Target 오브젝트에 Target 스크립트 생성
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+// 네비게이션 사용 위해 넣기
+using UnityEngine.AI;
+
+public class Target : MonoBehaviour
+{
+    NavMeshAgent navAgent;
+
+    private void Start()
+    {
+	    // NavMeshAgent 타입의 오브젝트 의 정보를 변수에 저장
+        navAgent = FindObjectOfType<NavMeshAgent>();
+    }
+
+    void Update()
+    {
+        if (Input.GetMouseButtonDown(0))
+        {
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            RaycastHit hitInfo;
+
+            if (Physics.Raycast(ray.origin, ray.direction, out hitInfo))
+            {
+                Vector3 targetPosition = hitInfo.point;
+                transform.position = targetPosition;
+
+                // 에이전트의 목적지는 = targetPosition;
+                navAgent.destination = targetPosition;
+            }
+        }
+    }
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Enemy 오브젝트에 Nav Mesh Agent 컴포넌트 생성
+Base Offset : 0
+Speed       : 0
+Height      : 1
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+프로젝트뷰에 새 스크립트 Aspect 생성
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class Aspect : MonoBehaviour
+{
+    // 태그처럼 카테고리 만들기
+    public enum AspectName
+    {
+        Player,
+        Enemy
+    }
+
+    public AspectName aspectName;
+}
+
+Enemy 와 AI Character 에 넣기
+
+Enemy 에 Enemy 로 설정
+AI Character 에 Player 로 설정
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+정찰 구현
+
+AI Character 오브젝트에 Wonder 스크립트 생성
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class Wonder : MonoBehaviour
+{
+    // 목적지
+    Vector3 tarPos;
+
+    float minX = -45f;
+    float maxX = 45f;
+    
+    float minZ = -45f;
+    float maxZ = 45f;
+
+    float rotSpeed = 2f;
+    float movementSpeed = 5f;
+
+    private void Start()
+    {
+        GetNextPosition();
+    }
+
+    private void Update()
+    {
+        // 타겟의 위치와 오브젝트의 거리 차이가 5 이하이면 도착했다고 판정
+        if (Vector3.Distance(tarPos, transform.position) <= 5f)
+        {
+            // 다음 목적지 설정
+            GetNextPosition();
+        }
+
+        // 부드럽게 회전 시키기
+        Quaternion tarRot = Quaternion.LookRotation(tarPos - transform.position);
+
+        // 지금 회전방향, 목적 회전방향, 회전양(델타타임 넣음으로서 속도 조절 가능)  
+        transform.rotation = Quaternion.Slerp(
+            transform.rotation, tarRot, rotSpeed * Time.deltaTime);
+        transform.Translate(new Vector3(0, 0, movementSpeed * Time.deltaTime));
+    }
+
+    void GetNextPosition()
+    {
+        tarPos = new Vector3(Random.Range(minX, maxX), 0f, Random.Range(minZ, maxZ));
+    }
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+센서 구현 ( 상속 사용)
+
+센서 에 공통점이 있음 (무엇을 감지할것인지, 등등)
+
+센서 클래스 를 만들고 자식 클래스로 시각,청각을 넣을것임
+
