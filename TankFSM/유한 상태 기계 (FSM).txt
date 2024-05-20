@@ -1,0 +1,137 @@
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+빈 오브젝트 생성 > Target 으로 변경
+
+자식오브젝트 로 Sphere 생성
+위치값 y 만 1로 변경
+
+프로젝트 뷰 에 Materials 폴더 생성후 빨간색 마테리얼 생성후
+빨간색(Red) 적용
+
+Sphere 오브젝트 콜라이더 제거
+
+Target 오브젝트에 Target 스크립트 추가
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.AI;
+
+public class Target : MonoBehaviour
+{
+    public NavMeshAgent playerNavAgent;
+
+    private void Start()
+    {
+        playerNavAgent = GameObject.FindWithTag("Player").GetComponent<NavMeshAgent>();
+    }
+
+    private void Update()
+    {
+        if (Input.GetMouseButton(0))
+        {
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            RaycastHit hitInfo;
+
+            if (Physics.Raycast(ray.origin, ray.direction ,out hitInfo))
+            {
+                Vector3 targetPosition = hitInfo.point;
+                playerNavAgent.destination = targetPosition;
+                transform.position = targetPosition;
+            }
+        }
+    }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+애니메이션 컨트롤러 만들것임
+
+프로젝트 뷰 폴더 생성 > StateMachines
+StateMachines 우클릭 Create > Animate Controller > 이름 EnemyFsm
+
+Window > Animation > Animator 뷰 활성
+
+Create State > Empty
+3개 를 만들고 각각 Patrol(정찰), Chase(추격), Shoot(사격) 로 이름 설정
+
+Patrol : 정찰 상태에서 추격 상태로 전이 가능
+         조건 체인을 사영하여 변경 상태 결정
+		 플레이어를 봉 수 있다면 추격, 아니면 정찰 지속
+		 
+Chase  : 계속 추적이 가능한지 검사
+         범위내에 플레이어가 있는지, 시야에 놓쳤는지, 사격 가능하면 사격으로 전이
+		 
+Shoot  : 공격 가능 상태이면 공격
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Patrol 에서 Chase 로 양방향 트랜지션, Chase 에서 Shoot 으로 양방향 트랜지션
+Shoot 에서 Patrol 로 단방향 트랜지션 생성
+
+float 타입의 Parameter 생성 distanceFromPlayer 로 이름 설정
+bool 타입의 Parameter 생성 isPlayerVisible 로 이름 설정
+
+Patrol > Chase 로 가는 트랜지션의 컨디션에 
+distanceFromPlayer, isPlayerVisible 추가
+
+distanceFromPlayer 파라매터는 Less : 5 로 적용
+isPlayerVisible : true
+
+Less : 미만
+
+Greater : 초과
+
+Chase > Patrol 로 가는 트랜지션
+위에는 두개의 트랜지션이 참이어야 전이 되는데 Chase 상태에서 정찰로 갈때는
+둘중 한개만 만족해도 전이되게 하고싶음
+
+트랜지션 하나 더 추가 > 인스펙터 뷰 트랜지션 칸 두개 각각 설정 가능
+하나는 distanceFromPlayer Greater : 5,
+하나는 isPlayerVisible : false 로
+
+
+Chase > Shot 트랜지션 에는 distanceFromPlayer Less : 3 설정
+Shoot > Chase 트랜지션에는 distanceFromPlayer 2개, isPlayerVisible 1개 설정
+
+각각 distanceFromPlayer Greater : 3, distanceFromPlayer Less : 6
+isPlayerVisible true
+
+
+Shot > Patrol 로 가는 트랜지션 에는 두개 의 트랜지션 생성
+하나는 distanceFromPlayer Greater : 6
+
+하나는 isPlayerVisible false
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+프로젝트 뷰 에서 다운 받은 에셋 Environment 배치
+EnemyTankPlaceholder, PlayerTankPlaceholder 배치
+
+마테리얼 만들어서 각각 색상 배치
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+웨이 포인트 생성( 정찰 할 곳 왔다갔다)
+
+빈오브젝트 생성 이름 WayPoint 위치값 리셋
+
+자식 오브젝트 두개 생성 각각 P1, P2 생성
+
+P1 위치값
+7, 0, 18
+
+P2 위치값
+-12, 0, -14
+
+Environment 오브젝트에 Static 켜져있는지 확인 후 안 켜져있다면 켜기
+
+Window > AI > Navigation > Bake > Bake
+
+EnemyTankPlaceholder 에 Animator 컴포넌트 있는지 확인후 없으면 추가
+Controller 에 만들었던 EnemyFsm 넣기
+
