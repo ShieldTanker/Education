@@ -1,0 +1,302 @@
+3D 코어 프로젝트 생성
+
+다운받은 에셋 추가
+
+3D 오브젝트 Plane 추가
+
+이름 Floor 로 한뒤 스케일 10, 1, 10 으로 변경
+
+프로젝트뷰 에서 Materials 폴더 만든뒤 Material 추가 
+및 색상 정한뒤 그 색상으로 이름 설정(Green)
+
+Floor 에 Material 추가
+
+////////////////////////////////////////////////////////////////////////////////
+
+장애물 추가
+
+3D 오브젝트 Cube 추가 > Wall 로 이름 변경
+Materials 의 색상 복제후 다른 색으로 변경(Yellow)
+
+5개 정도 복제후 장애물 배치
+
+NavMesh(Navigation Mesh) : 게임 월드상에 걸어 다닐 수 있는 표면을 기술한 자료 구조
+게임 월드상의 한 지점에서 다른 지점으로 이동경로를 찾을 수 있도록 함
+
+NavMesh Agent: 각자의 목표로 이동할떄 서로 피래갈수 있는 게임 컴포넌트
+
+Off Mesh Link : 걸어갈 수 없는 길을 이동할 수 있게 해주는 지름길
+
+NavMesh Obstacle : 게임 월드를 이동하는 NavMesh Agent 가 피해야할 움직이는 컴포넌트
+
+Navigation Static : 게임 월드 내에서 움직이지 않는 컴포넌트
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+빈오브젝트 추가 GameLevel 로 이름 변경 위치값 리셋
+
+Floor 오브젝트와 Wall 오브젝트들을 넣기
+
+Static : 움직이지 않는 오브젝트 들을 자동으로 최적화 해줌
+
+GameLevel 오브젝트 선택 > 이름 옆에 Static 의 화살표 > Navigation Static 선택 
+자식오브젝트 들 까지 선택
+
+Window > AI > Navigation > 인스펙터뷰 에 네비게이션뷰 생성됨
+Bake 칸 누른뒤 아래 Bake 누르기
+
+Bake : 미리 움직일수 있는 영역을 만듬( 위치 수정하면 다시 해줘야함)
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+빈오브젝트 추가 > TankAI 로 이름 변경 > 위치값 초기화
+
+TankAI 에 프로젝트뷰 Models 에 있는 Tank 프리팹 추가
+
+TankAI 선택 후 컴포넌트 추가 > Nav Mesh Agent
+
+BoxCollider 도 추가
+
+센터값 0, 0.7, 0
+사이즈 3.2, 1.4, 4.5
+
+프로젝트뷰에 Prefabs 폴더 만든뒤 TankAI 넣기
+
+////////////////////////////////////////////////////////////////////////////////////////////
+
+빈오브젝트 추가 > Target 으로 이름 변경 , 위치값 리셋
+
+Target 오브젝트에 자식오브젝트로 Sphere 넣고 Point 로 이름 변경
+
+Material 색상 복제후 색상 변경(Red), Target 에 적용
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+MianCamera 위치값 0, 65, -52
+           회전값 60, 0, 0
+		   
+////////////////////////////////////////////////////////////////////////////////////////////
+
+Target 에 Target 스크립트 생성
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+// 네비게이션 기능 사용 위해 넣기
+using UnityEngine.AI;
+
+public class Target : MonoBehaviour
+{
+    NavMeshAgent[] navAgents;
+
+    private void Start()
+    {
+        // 존재하는 오브젝트들 중 특정 타입(클래스) 를 가진 모든 오브젝트 를 찾기
+        // as : 해당 타입으로 변환
+        navAgents = FindObjectsOfType(typeof(NavMeshAgent)) as NavMeshAgent[];
+        Debug.Log("Number of agent = " + navAgents.Length);
+    }
+
+    private void Update()
+    {
+        if (Input.GetMouseButton(0))
+        {
+            // 메인 카메라에서 클릭한 위치쪽으로 Ray를 쏨
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            // Ray 에 맞은 오브젝트를 저장할 변수 선언
+            RaycastHit hitInfo;
+
+            // Ray 에 맞은 벡터 값들을 hitInfo 에 저장
+            // Physics.Raycast(ray, out hitInfo) 로 써도 됨
+            if (Physics.Raycast(ray.origin, ray.direction, out hitInfo))
+            {
+                // targetPosition = ray 에 맞은 오브젝트의 벡터값
+                Vector3 targetPosition = hitInfo.point;
+
+                // 목적지에 targetPosition 설정
+                UpdateTargets(targetPosition);
+
+                // 오브젝트의 위치를 targetPosition 위치로 설정
+                transform.position = targetPosition;
+            }
+        }
+    }
+
+    void UpdateTargets(Vector3 targetPosition)
+    {
+        foreach (NavMeshAgent agent in navAgents)
+        {
+            // destination : 목적지 설정
+            agent.destination = targetPosition;
+        }
+    }
+}
+
+
+Target 오브젝트를 Prefabs 에 저장
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+네비게이션 실행시 벽을 살짝 뚫고 들어감
+
+Agent Radius 를 늘려 벽에 닿는 판정을 더 크게 만든다
+Agent Radius 를 크게 하면 벽에서 더 멀어짐
+
+Agent Height : Agent 의 높이, 특정 높이까지 지나갈수 있음
+
+Max Slope : 지나갈수 있는 각도
+
+Step Height : 지나갈수 있는 단차 (계단 같은거)
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Slope 예제
+
+Wall 만들기
+
+NavMesh-Slope 씬 만들고 Plane 오브젝트 생성 후 위에 했던것처럼 바닥 세팅
+
+색상 적용
+
+Cube 생성 후 Wall 로 변경
+
+위치값 -70, 4, 0
+스케일 60, 8, 12
+
+Wall 복제후(1)
+위치값 -46, 4, 14
+회전값  0, -90, 0
+스케일  40, 8, 12
+
+Wall 복제후 (2)
+위치값 46, 4, 14
+회전값 0, -90, 0
+스케일 40, 8, 12
+
+Wall 복제후 (3)
+위치값 70, 4, 0
+스케일 60, 8, 12
+
+Wall 복제후 (4)
+위치값 0, 4, 29
+스케일 104, 8, 12
+
+색상 전부 넣은뒤 빈오브젝트 만들고 Walls 변경 및 전부 넣기
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Slope 만들기
+
+Cube 만든뒤 Slope 로 변경
+
+위치값 -25, 3, 9
+회전값 -15, 0, 0
+스케일 10, 1, 30
+
+Slope 복제 (1)
+위치값 10, 3, 9
+회전값 -15, 0, 0
+스케일 10, 1, 30
+
+Slope 복제 (2)
+위치값 -10, 3, 47
+회전값 15, 0, 0
+스케일 10, 1, 30
+
+Slope 복제후 (3)
+위치값 25, 3, 47
+회전값 15, 0, 0
+스케일 10, 1, 30
+
+모든 Slope 에 색상 넣기
+
+빈오브젝트 만들고 Slopes 로 변경 및 모든 Slope 들 넣기
+
+빈오브젝트 만들고 GameLevel 만든뒤 Floor, Walls, Slopes 넣기
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+GameLevel 선택후 Navigation Static 적용
+
+GameLevel 선택후 Navigation뷰 에서 Bake
+
+Bake 했을떄 경사면에 이동경로 가 생성 되지 않음
+
+넘어갈수 있는 단차 가 현재 값 보다 크기 때문
+Step Height 를 2 로 해주면 넘어갈 수 있음
+
+프리팹으로 넣었던 TankAI 와 Target 프리팹을 배치 하여 테스트
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Off Mesh Link
+갈 수 없는 곳 을 이동 할 수 있게 하는 지름길
+
+수동 및 생성시 자동 생성 설정 가능
+
+새로운 씬 만들고 NavMesh-OffLink 로 변경
+
+Plane 생성 후 Ground1 으로 변경
+위치값 0, 0, 0
+스케일 15, 1, 10
+색상 적용 (1)
+
+Ground1 복제후 Ground2 로 변경
+위치값 0, 0, 110
+색상 적용 (2)
+
+Ground2 복제후 Ground3 으로 변경
+위치값 0, 0, 220
+색상적용 (3)
+
+빈오브젝트 생성 후 Grounds 로 변경 및 Ground 들 넣기
+
+GameLevel 생성후 Grounds 넣기
+
+GameLevel 에 Navigation Static 적용
+
+////////////////////////////////////////////////////////////////////////////////////
+
+TankAI 와 Target 프리팹 배치 후 테스트 했는데 땅을 뛰어넘지 못함
+
+Ground1 Static 설청칸에 Off Mesh Link Generation 추가로 활성
+(하나만 하는 이유는 하나만 활성시 인접한곳으로 점프 가능하기 때문)
+Bake 칸에 Jump Distance 10 넘는 수 를 넣고 Bake 하면 넘어갈수 있음
+
+Jump Distance : 넘어갈수 있는 거리
+
+///////////////////////////////////////////////////////////////////////////////////////
+
+특정 위치에 이동할수있는 지점 만들기
+
+빈 오브젝트 생성 후 OffMeshLink 로 변경 후 위치값 초기화 한뒤 GameLevel 에 넣기
+
+OffMeshLink 오브젝트에 자식오브젝트 로 Sphere 생성(빈 오브젝트로 가능한테 눈에 보이기 위해)
+> 이름 Start 로 변경
+
+Start 오브젝트
+위치값 0, 0, 155
+스케일 3, 3, 3
+색상 추가
+
+Start 복제후 End 로 변경
+위치값 0, 0, 175
+
+OffMeshLink 오브젝트 여러개 복제 > 위치 적당히 배치
+
+자식오브젝트 의 Start 에 Add Component > Off Mesh Link
+
+Start 참조 연결에 자기자신인 Start 오브젝트
+End 참조 연결에 End 오브젝트 를 연결
+
+다른 OffMeshLink 들고 똑같이 적용
+
+테스트
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+화면 계속 누를 시 공이 화면 가까이 옴
+
+Raycast 는 콜라이더가 있으면 작동 함으로 콜라이더 컴포넌트 제거 하면 해결

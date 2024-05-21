@@ -74,6 +74,8 @@ Patrol 에서 Chase 로 양방향 트랜지션, Chase 에서 Shoot 으로 양방
 Shoot 에서 Patrol 로 단방향 트랜지션 생성
 
 float 타입의 Parameter 생성 distanceFromPlayer 로 이름 설정
+float 타입의 Parameter 생성 distanceFromWaypoint 로 이름 설정
+
 bool 타입의 Parameter 생성 isPlayerVisible 로 이름 설정
 
 Patrol > Chase 로 가는 트랜지션의 컨디션에 
@@ -134,4 +136,213 @@ Window > AI > Navigation > Bake > Bake
 
 EnemyTankPlaceholder 에 Animator 컴포넌트 있는지 확인후 없으면 추가
 Controller 에 만들었던 EnemyFsm 넣기
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+EnemyTankPlaceholder 에 TankAI 스크립트 추가
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.AI;
+
+public class TankAI : MonoBehaviour
+{
+    // 목적지
+    Transform pointA;
+    Transform pointB;
+
+    // 자기 자신 오브젝트 넣기
+    NavMeshAgent navMeshAgent;
+
+    // 플레이어 감지
+    GameObject player;
+    // 애니메이터 변환으로 FSM 전환
+    Animator animator;
+
+    Ray ray;
+    RaycastHit hit;
+
+    // 최대 감지 거리
+    float maxDistanceToCheck = 10f;
+    // 현재 거리
+    float currentDistance;
+    //목표와의 거리
+    float distanceFromTarget;
+
+    // 방향 체크
+    Vector3 checkDirection;
+
+    // 0이면 0번 인덱스로 1이면 1번 인덱스로 목적지
+    int currentTarget;
+
+    // 목적지 배열
+    Transform[] waypoints;
+
+    private void Awake()
+    {
+        player = GameObject.FindWithTag("Player");
+        animator = GetComponent<Animator>();
+        pointA = GameObject.Find("P1").transform;
+        pointB = GameObject.Find("P2").transform;
+        navMeshAgent = GetComponent<NavMeshAgent>();
+        
+        // 초기값 으로 A,B 포인트 넣기
+        waypoints = new Transform[2] { pointA, pointB };
+        
+        // 처음 이동은 0번 인덱스 인 pointA 로 이동
+        currentTarget = 0;
+        
+        // 목적지를 currentTarget 의 번호로 이동
+        navMeshAgent.SetDestination(waypoints[currentTarget].position);
+    }
+
+    // 굳이 FixedUpdate 할 필요는 없음
+    private void FixedUpdate()
+    {
+        // 플레이어 와 현재 오브젝트 와 의 거리 구하기
+        currentDistance = Vector3.Distance(player.transform.position, transform.position);        
+        // float 타입의 파라매터에 값을 전달
+        animator.SetFloat("distanceFromPlayer", currentDistance);
+        
+        // 플레이어 오브젝트로 향하는 방향 구하기
+        checkDirection = player.transform.position - transform.position;
+        
+        // 현재 위치에서 플레이어 방향으로 ray 쏘기
+        ray = new Ray(transform.position, checkDirection);
+
+        Vector3 drawDirection = maxDistanceToCheck * checkDirection.normalized;
+
+        // DrawLine 은 위치와 위치끼리 선을 그리기
+        // DrawRay 는 지정위치 에서 지정벡터 방향으로 선 그리기
+        Debug.DrawRay(transform.position, drawDirection, Color.red);
+
+        // ray 가 최대 거리 안에 있으면 hit 에 결과값 전달
+        if (Physics.Raycast(ray, out hit, maxDistanceToCheck))
+        {
+            // 객체 끼리 서로 비교(같은 객체를 참조하는지 비교함)
+            // 값이 같은지 비교하면 메모리 소모가 엄청나기 때문에 참조방식으로 비교함
+            if (hit.collider.gameObject == player)
+                animator.SetBool("isPlayerVisible", true);
+            else
+                animator.SetBool("isPlayerVisible", false);
+        }
+        else
+            animator.SetBool("isPlayerVisible", false);
+
+
+        // 목적지 까지 거리
+        distanceFromTarget = Vector3.Distance(waypoints[currentTarget].position, transform.position);
+
+        // distanceFromWaypoint 에 현재 목적지 까지 의 거리를 전달
+        animator.SetFloat("distanceFromWaypoint", distanceFromTarget);
+    }
+
+    // 애니메이터뷰에서 FindNewTarget 상태일때 호출
+    public void SetNextPoint()
+    {
+        switch (currentTarget)
+        {
+            case 0: //목적지 번호가 0
+                currentTarget = 1;
+                break;
+            
+            case 1: // 목적지 번호가 1
+                currentTarget = 0;
+                break;
+        }
+        navMeshAgent.SetDestination(waypoints[currentTarget].position);
+    }
+
+}
+
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+애니메이터뷰 Create Sub State Machine > 이름 Patrol
+
+기존 Patrol 스테이트 를 새로 만든 Patrol 에 넣은 후 더블클릭
+넣어진 Patrol 이름을 PatrolEntry 로 변경
+
+Create State > Empty > MoveToTarget 으로 이름 설정
+Create State > Empty > FindNewTarget 으로 이름 설정
+
+PatrolEntry 에서 새로 만든 두 State 에 단방향 트랜지션 생성
+MoveToTarget 에서 PatrolEntry 로 가는 트랜지션 생성
+
+MoveToTarget 과 FindNewTarget 에 서로 양방향 트랜지션 생성
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+트랜지션 설정
+PatrolEntry 에서 MoveToTarget 으로 
+가는 트랜지션에 distanceFromWaypoint Greater : 1
+
+MoveToTarget 에서 PatrolEntry 
+가는 트랜지션에 distanceFromPlayer Less : 5
+isPlayerVisible : true
+
+PatrolEntry 에서 FindNewTarget 으로 
+가는 트랜지션에 distanceFromWaypoint Less : 1
+
+MoveToTarget 에서 FindNewTarget 으로
+가는 트랜지션에 distanceFromWaypoint Less : 1
+
+//////////////////////////////////////////////////////////////////////////
+
+FindNewTarget 스테이트 선택 > Add Behaviour > SelectWayPointState 스크립트 생성
+
+OnStateEnter : 전이가 시작되어 상태에 진입할 때 호출
+OnStateUpdate : 진입후 매 프레임 호출
+OnStateExit : 상태에서 나갈때 호출
+OnStateMove : 진입후 매 프레임 호출, 나갈때도 호출됨
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class SelcetWayPointState : StateMachineBehaviour
+{
+    // OnStateEnter is called when a transition starts and the state machine starts to evaluate this state
+    override public void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
+    {
+        // 같은 오브젝트의 애니메이터 에 있는 TankAI 컴포넌트
+        TankAI tankAi = animator.GetComponent<TankAI>();
+        tankAi.SetNextPoint();
+    }
+
+// 아래 코드들은 필요 할 때 만 주석 제거
+
+    // OnStateUpdate is called on each Update frame between OnStateEnter and OnStateExit callbacks
+    //override public void OnStateUpdate(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
+    //{
+    //    
+    //}
+
+    // OnStateExit is called when a transition ends and the state machine finishes evaluating this state
+    //override public void OnStateExit(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
+    //{
+    //    
+    //}
+
+    // OnStateMove is called right after Animator.OnAnimatorMove()
+    //override public void OnStateMove(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
+    //{
+    //    // Implement code that processes and affects root motion
+    //}
+
+    // OnStateIK is called right after Animator.OnAnimatorIK()
+    //override public void OnStateIK(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
+    //{
+    //    // Implement code that sets up animation IK (inverse kinematics)
+    //}
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+연습문제
+추격 상태와 발사 상태에서 플레이어를 추적하도록 설정
 
