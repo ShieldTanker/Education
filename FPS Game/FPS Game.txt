@@ -1,0 +1,143 @@
+
+프로토 타입 단계 부터 시작
+
+씬 이름 변경 > MainScene
+
+바닥 추가
+3D 오브젝트 Plane 추가 > Ground 로 이름 변경
+스케일 10, 1, 10
+
+프로젝트뷰 Materials 폴더 추가 > 마테리얼 생성 Mat_Ground 로 변경 색 지정
+Ground 에 넣기
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Capsule 오브젝트 추가 > Player 로 변경
+위치값 0, 1, 0
+
+MainCamera 오브젝트에 CamRotate 스크립트 생성
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class CamRotate : MonoBehaviour
+{
+    // 회전 속도 변수
+    public float rotSpeed = 200f;
+
+    float mX = 0f;
+    float mY = 0f;
+
+    private void Update()
+    {
+        // 마우스 입력을 받음
+        float mouse_X = Input.GetAxis("Mouse X");
+        float mouse_Y = Input.GetAxis("Mouse Y");
+
+        // 회전값 변수에 마우스 입력값만큼 미리 누적
+        mX += mouse_X * rotSpeed * Time.deltaTime;
+        mY += mouse_Y * rotSpeed * Time.deltaTime;
+
+        // 마우스 상하 이동 회전 변수(mY) 의 값을 -90 ~ 90 도 사이로 제한
+        mY = Mathf.Clamp(mY, -90, 90);
+
+        // 마우스 입력 값을 이용해 외전 방향을 결정(X축기준 회전 : 상하, Y축 기준 회전: 좌우)
+        // 회전 방향으로 오브젝트 회전
+        transform.eulerAngles = new Vector3(-mY, mX, 0);
+    }
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+플레이어 회전 구현
+
+Player 오브젝트에 PlayerRotate 스크립트 생성
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class PlayerRotate : MonoBehaviour
+{
+    // 회전 속도 변수
+    public float rotSpeed = 200f;
+
+    // 회전값 변수
+    float mx = 0f;
+
+    private void Update()
+    {
+        // 마우스 좌우 입력을 받음
+        float mouse_X = Input.GetAxis("Mouse X");
+
+        // 회전 값 변수에 마우스 입력 값만큼 미리 누적
+        mx += mouse_X * rotSpeed * Time.deltaTime;
+
+        // 회전 방향으로 물체를 회전기킴
+        transform.eulerAngles = new Vector3(0, mx, 0);
+    }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+카메라 위치를 플레이어 와 동기화
+
+Player 오브젝트에 자식 오브젝트로 빈오브젝트 CamPosition 생성
+위치값 0, 0.25, 0
+
+MainCamera 오브젝트에 CamFollow 스크립트 생성
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class CamFollow : MonoBehaviour
+{
+    // 목표가 될 트랜스폼 컴포넌트
+    public Transform target;
+
+    private void Update()
+    {
+        // 카메아의 위치를 목표 트랜스폼의 위치에 일치시킴
+        transform.position = target.position;
+    }
+}
+
+target 에 CamPosition 참조 연결
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Player 움직임 구현
+
+Player 오브젝트에 PlayerMove 스크립트 생성
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class PlayerMove : MonoBehaviour
+{
+    public float moveSpeed = 7f;
+
+    private void Update()
+    {
+        // 사용자의 입력을 받음
+        float h = Input.GetAxis("Horizontal");
+        float v = Input.GetAxis("Vertical");
+
+        // 이동 방향을 설정
+        Vector3 dir = new Vector3(h, 0, v);
+        dir = dir.normalized;
+
+        // 메인 카메라를 기준으로 방향을 추가로 변환(Translate 말고 이방법도 있음)
+        // 문제는 하늘을 바라보면 위로 떠버림
+        dir = Camera.main.transform.TransformDirection(dir);
+
+        // 이동 속도에 맞춰 이동
+        transform.position += dir * moveSpeed * Time.deltaTime;
+    }
+}
+
