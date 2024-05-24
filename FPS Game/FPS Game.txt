@@ -318,7 +318,226 @@ BombAction 의 Bomb Effect 칸에 FX_Bomb 을 참조 연결
 
 Player 오브젝트에 PlayerFire 스크립트 추가
 
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
 
+public class PlayerFire : MonoBehaviour
+{
+    // 발사 위치
+    public GameObject firePosition;
 
+    // 투척 무기 오브젝트
+    public GameObject bombFactory;
 
+    // 투척 파워
+    public float throwPower = 15f;
+
+    // 피격 이펙트 오브젝트
+    public GameObject bulletEffect;
+
+    // 피격 이펙트 파티클 시스템
+    ParticleSystem ps;
+
+    private void Start()
+    {
+        // 피격 이펙트 오브젝트에서 파티클 시스템 컴포넌트 가져오기
+        ps = bulletEffect.GetComponent<ParticleSystem>();
+    }
+    private void Update()
+    {
+        // 마우스 오른쪽 버튼을 입력 받음
+        if (Input.GetMouseButtonDown(1))
+        {
+            // 수류탄 오브젝트를 생성한 후 수류탄의 생성 위치를 발사 위치로 변경
+            GameObject bomb = Instantiate(bombFactory);
+            bomb.transform.position = firePosition.transform.position;
+
+            // 수류탄의 오브젝트의 Rigidbody 컴포넌트를 가져옴
+            Rigidbody rb = bomb.GetComponent<Rigidbody>();
+
+            // 카메라의 정면 방향으로 수류탄에 물리적인 힘을 가함 (Impulse : 순간적인 힘)
+            rb.AddForce(Camera.main.transform.forward * throwPower, ForceMode.Impulse);
+        }
+
+        // 마우스 왼쪽 버튼을 입력
+        if (Input.GetMouseButtonDown(0))
+        {
+            // 레이를 생성한 후 발사될 위치와 진행 방향을 설정
+            Ray ray = new Ray(
+                Camera.main.transform.position,
+                Camera.main.transform.forward);
+
+            // 레이가 부딯인 대상의 정보를 저장할 변수를 생성
+            RaycastHit hitInfo;
+            if (Physics.Raycast(ray,out hitInfo))
+            {
+                // 피격 이펙트의 위치를 레이가 부딪힌 지점으로 이동
+                bulletEffect.transform.position = hitInfo.point;
+
+                /* 피격 이펙트 의  forward 방향을 레이가
+                 부딪힌 지점의 법선(부딫힌 면의 수직) 벡터와 일치 시킴 */
+                bulletEffect.transform.forward = hitInfo.normal;
+
+                // 피격 이펙트 플레이
+                ps.Play();
+            }
+        }
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+다운 받은 에셋의 Effect > Stone_BulletEffect 프리팹 을 오브젝트로 생성
+위치값 0, 1000, 0
+스케일 2, 2, 2 로 설정
+
+Player 오브젝트에 BulletEffect 에 참조 연결
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+다운받은 이미지 CrossHair 의 텍스쳐 타입을 Sprite(2D and UI) 로 설정
+
+UI > Image > 이름을 CrossHair 
+>위치 센터에 0,0,0
+          30, 30
+
+소스 이미지에 CrossHair 이미지 넣기
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+collider : 충돌대상의 가진 충돌체 컴포넌트
+point : 충돌한 위치의 좌표
+normal : 충돌한 지점의 법선벡터 ( 부딫힌 물체의 수직 벡터)
+barycentricCoordinate : 충돌지점의 폴리곤 위치
+distance : 레이 발사 지점부터 충돌한 지점까지 거리
+.
+.
+.
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+적 오브젝트 생성
+
+3D 오브젝트 > Capsule > Enemy 로 변경
+
+위치값 -20, 1, 0
+
+적 구분되기 쉽게 마테리얼 추가
+
+Enemy 오브젝트에 Character Controller 추가 > 콜라이더 제거
+
+오브젝트 에 EnemyFSM 스크립트 추가
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class EnemyFSM : MonoBehaviour
+{
+    // 에너미 상태 상수
+    enum EnemyState
+    {
+        Idle,
+        Move,
+        Attack,
+        Return,
+        Damaged,
+        Die,
+    }
+
+    //에너미 상태 변수
+    EnemyState m_State;
+
+    // 플레이어 발견 범위
+    public float findDistance = 8f;
+
+    // 플레이어 트랜스폼
+    Transform player;
+
+    // 공격 가능 범위
+    public float attackDistance = 2f;
+
+    // 이동 속도
+    public float moveSpeed = 5;
+
+    // 캐릭터 컨트롤러 컴포넌트
+    CharacterController cc;
+
+    private void Start()
+    {
+        // 최초의 에너미 상태를 대기 상태로
+        m_State = EnemyState.Idle;
+
+        /* 플레이어 의 트랜트폼 컴포넌트 받아오기
+           (오브젝트가 게임 중간에 생성 되기에 미리 참조연결 할 수 없음)  */
+        player = GameObject.Find("Player").transform;
+
+        // 캐릭터 컴포넌트 불러오기
+        cc = GetComponent<CharacterController>();
+    }
+
+    private void Update()
+    {
+        // 현재 상태 를 체크해 상태에 따라 메소드 호출
+        CheckState();
+    }
+
+    void CheckState()
+    {
+        // 현재 상태 에 따라 메소드 호출
+        switch (m_State)
+        {
+            case EnemyState.Idle:
+                Idle();
+                break;
+            case EnemyState.Move:
+                Move();
+                break;
+            case EnemyState.Attack:
+                // Attack();
+                break;
+            case EnemyState.Return:
+                // Return();
+                break;
+            case EnemyState.Damaged:
+                // Damaged();
+                break;
+            case EnemyState.Die:
+                // Die();
+                break;
+
+            default:
+                break;
+        }
+    }
+    void Idle()
+    {
+        // 만일, 플레이어 와 의 거리가 액션 범위 내라면 Move 로 전환
+        if (Vector3.Distance(transform.position, player.position) <= findDistance)
+        {
+            m_State = EnemyState.Move;
+            print("상태 전환 : Idle -> Move");
+        }
+    }
+
+    void Move()
+    {
+        // 만일, 플레이어 와 의 거리가 공격 범위 밖 이라면 플레이어를 향해 이동
+        if (Vector3.Distance(transform.position, player.position) >= attackDistance)
+        {
+            // 이동 방향 설정
+            Vector3 dir = (player.position - transform.position).normalized;
+
+            // 캐릭터 컨트롤러 를 이용해 이동하기
+            cc.Move(dir * moveSpeed * Time.deltaTime);
+        }
+        // 그렇지 않으면
+        else
+        {
+            m_State = EnemyState.Attack;
+            print("상태 전환 : Move -> Attack");
+        }
+    }
+}
 
