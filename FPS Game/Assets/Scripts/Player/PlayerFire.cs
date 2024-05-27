@@ -19,6 +19,9 @@ public class PlayerFire : MonoBehaviour
     // 피격 이펙트 파티클 시스템
     ParticleSystem ps;
 
+    // 발사 무기 공격력
+    public int weaponPower = 5;
+
     private void Start()
     {
         // 피격 이펙트 오브젝트에서 파티클 시스템 컴포넌트 가져오기
@@ -52,15 +55,25 @@ public class PlayerFire : MonoBehaviour
             RaycastHit hitInfo;
             if (Physics.Raycast(ray,out hitInfo))
             {
-                // 피격 이펙트의 위치를 레이가 부딪힌 지점으로 이동
-                bulletEffect.transform.position = hitInfo.point;
+                // 만일 레이에 부딪힌 대산의 레이어가 "Enemy" 라면 데미지 함수를 실행
+                if (hitInfo.transform.gameObject.layer == LayerMask.NameToLayer("Enemy"))
+                {
+                    EnemyFSM eFsm = hitInfo.transform.GetComponent<EnemyFSM>();
+                    eFsm.HitEnemy(weaponPower);
+                }
+                // 그렇지 않다면 레이에 부딪힌 지점에 피격 이펙트 플레이
+                else
+                {
+                    // 피격 이펙트의 위치를 레이가 부딪힌 지점으로 이동
+                    bulletEffect.transform.position = hitInfo.point;
 
-                /* 피격 이펙트 의  forward 방향을 레이가
-                 부딪힌 지점의 법선(부딫힌 면의 수직) 벡터와 일치 시킴 */
-                bulletEffect.transform.forward = hitInfo.normal;
+                    /* 피격 이펙트 의  forward 방향을 레이가
+                     부딪힌 지점의 법선(부딫힌 면의 수직) 벡터와 일치 시킴 */
+                    bulletEffect.transform.forward = hitInfo.normal;
 
-                // 피격 이펙트 플레이
-                ps.Play();
+                    // 피격 이펙트 플레이
+                    ps.Play();
+                }
             }
         }
     }

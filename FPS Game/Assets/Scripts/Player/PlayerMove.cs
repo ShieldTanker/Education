@@ -23,6 +23,9 @@ public class PlayerMove : MonoBehaviour
     // 점프 상태 변수
     public bool isJumping = false;
 
+    // 플레이어 체력
+    public int hp = 20;
+
     private void Start()
     {
         cc = GetComponent<CharacterController>();
@@ -31,8 +34,8 @@ public class PlayerMove : MonoBehaviour
     private void Update()
     {
         // 사용자의 입력을 받음
-        float h = Input.GetAxis("Horizontal");
-        float v = Input.GetAxis("Vertical");
+        float h = Input.GetAxisRaw("Horizontal");
+        float v = Input.GetAxisRaw("Vertical");
 
         // 이동 방향을 설정
         Vector3 dir = new Vector3(h, 0, v);
@@ -69,5 +72,11 @@ public class PlayerMove : MonoBehaviour
 
         // 이동속도에 맞춰 이동
         cc.Move(dir * moveSpeed * Time.deltaTime);
+    }
+
+    // 플레이어의 피격 함수
+    public void DamageAction(int damage)
+    {
+        hp -= damage;
     }
 }
