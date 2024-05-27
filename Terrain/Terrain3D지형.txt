@@ -1,0 +1,45 @@
+3D 코어 유니티 생성
+
+씬 폴더 및 씬 이름 변경 _Scenes, Terrain
+
+하이어라키뷰 + > 3D Objects > Terrain
+씬뷰 맨 왼쪽 네모 눌러보면 기즈모 Center, Pivot 이 있음
+
+Pivot : 오브젝트 의 기준점
+Center : 오브젝트의 중심
+
+Terrain 의 기준점은 왼쪽 아래임 
+기즈모 센터로 해놓고 위치 값 -500, 0, -500 설정
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Terrain 선택 툴 두번째(브러시) 선택
+
+브러시 모양 두번째 원 선택
+사이즈 150
+Opacity 50
+
+모양 만들기
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+색 입히기
+
+다운받은 에셋 추가
+
+Terrain > Riase or Lower Terrain 을 Paint Texture 변경
+> Edit Terrain Layers... > Creat Layer > GrassHillAlbedo 더블클릭
+
+> Edit Terrain Layers... > Creat Layer > GrassRockAlbedo 더블클릭
+> GrassRockAlbedo 선택후 브러시 로 그리기 (크기는 60, 50)
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+나무 심기
+
+툴 세번째 Paint Tree > Edit Tree > Add Tree
+ 다운받은 에셋 하위폴더 SpeedTree > Brodleaf > 
+  Broadleaf_Mobile 를 끌어놓고 Add
+
+> 브러시 사이즈 60, Density 30, Tree Height Random 체크 해제 및 1.8
+
+다른 나무들도 추가

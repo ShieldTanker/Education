@@ -1,0 +1,84 @@
+2D 코어 프로젝트 생성
+하이어 라키 > 새 오브젝트 > Tilemap > Rectangular
+한 맵에 타일이 여러개 필요하면 Grid 자식 인 Tilemap만 복사
+
+
+Window > 2D > Tile Palette > 위치 자유
+
+
+타일 팔레트 뷰 > Create New palette > 이름 Background 
+> Image 폴더 만든후 경로 지정
+
+
+다운받은 스크립트 를 프로젝트뷰 Assets 에 넣기
+
+Assets 에 넣은 Jungle_Tileset 선택, Sprite Mode : Multiple 인지 확인
+안되어있으면 직접 잘라줘야함
+
+나뉘어진 스프라이트 0번 부터 전부 선택 > 타일 팔레트 뷰 빈공간에 넣기
+> 경로를 만들어둔 폴더(Images) 에 넣기 
+
+타일 팔레트 뷰 > 위에 툴 들중 브러시 선택 > 씬뷰에 그리기
+
+[ ] 로 회전 가능 > 타일 팔레트 뷰에서 드래그로 여러 타일 동시 선택 가능
+
+///////////////////////////////////////////////////////////////////////
+
+타일 팔레트 뷰 에서 Background 누른뒤 Create New Palette
+
+> GrassPlatForm > 경로는 생성한 폴더(Images)
+> 프로젝트뷰 GrassPlatForm_Tileset 자체를 타일 팔레트 뷰 빈공간에 넣기
+> 타일 들로 맵 만들기 >  하이어라키 뷰 Tilemap 선택
+> Tilemap Collider 2D 컴포넌트 추가 (이러면 모든 타일에 콜라이더 생성됨)
+> Used By Composite 활성
+> Compisite Collider 2D 컴포넌트 추가 (타일들의 콜라이더 합쳐짐)
+> RigidBody 2D 자동생성 되었음으로 Body Type을 Kinematic 으로 변경
+
+///////////////////////////////////////////////////////////////////////////////
+
+다운받은 PennyPixel 을 Assets 에넣고 프리팹을 오브젝트 추가
+
+//////////////////////////////////////////////////////////////////////////////////
+
+하이어라키뷰 에 빈 오브젝트 추가 > 이름 Background 
+> 프로젝트뷰 에서 Background_Gradient 를 자식 오브젝트 로 추가
+> 크기 x 좌표 2100 으로 설정
+
+> BackgroundClouds_SpriteSheet 에서 스프라이트 들 하나하나 를
+ Background 오브젝트의 자식 오브젝트 로 추가
+ 
+> 프로젝트뷰 폴더 생성 > 이름 Material > 새 Material 추가
+> 이름 Background > 인스펙터뷰 에 상단 Shader 부분 
+> Unlit > Texture 로 변경 > 인스펙터뷰 에 이미지 Background_Gradient 넣기
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+Sorting Layer 설정
+
+////////////////////////////////////////////////////////////////////////////////////////////
+
+장식 타일맵
+한 타일맵 에서 장식을 하면 콜라이더 가 장식 에도 추가될수 있음,
+ 타일맵 하나 추가 > 이름 Decorations > 장식 추가 및 Sorting Layer
+ 
+ 
+/////////////////////////////////////////////
+
+Window > Package Manager > 왼쪽 상단 In Project(현재 설치된 패키지만) 를
+ Unity Registry > 오른쪽 상단 Cinemachine 검색 후 인스톨
+ 
+> 하이어라키뷰 > Cinemachine 추가된것 확인 후 선택
+> Cinemachine > 2D Camera > CM vcam1 생성됨
+> Follow 에 PennyPixel 오브젝트 넣기
+> 인스펙터뷰 하단 Add Extentions > Cinemachine Confiner 2D 선택
+
+> Background 오브젝트 선택 > Polygon Collider 2D 추가
+> Edit Collider 선택 (뭔하는 콜라이더 모양으로 설정)
+> Is Trigger 활성화
+
+> CM vcam1 > Cinemachine Confiner 2D > Bounding Shape 2D
+> Background 오브젝트의 콜라이더 추가(오브젝트 넣으면 알아서 등록됨)
+
+
+
+
