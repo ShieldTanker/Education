@@ -446,6 +446,8 @@ public class EnemyFSM : MonoBehaviour
         Die,
     }
 
+    Coroutine hitCoroutine;
+
     //에너미 상태 변수
     EnemyState m_State;
 
@@ -521,7 +523,7 @@ public class EnemyFSM : MonoBehaviour
                 Return();
                 break;
             case EnemyState.Damaged:
-                // Damaged();
+                // Damaged(); 주석 제거 안함
                 break;
             case EnemyState.Die:
                 // Die();
@@ -618,7 +620,7 @@ public class EnemyFSM : MonoBehaviour
     void Damaged()
     {
         // 피격 상태를 처리하기 위한 코루틴 실행
-        StartCoroutine(DamagedProcess());
+        hitCoroutine = StartCoroutine(DamagedProcess());
     }
 
     // 데미지 처리용 코루틴 함수
@@ -633,6 +635,7 @@ public class EnemyFSM : MonoBehaviour
     }
 
     // 데미지 실행 함수
+    // 플레이어 파이어 쪽에서 호출
     public void HitEnemy(int hitPower)
     {
         // 만일, 이미 피격 상태 이거나 사망 상태 또는 복귀 상태라면
@@ -658,10 +661,32 @@ public class EnemyFSM : MonoBehaviour
         {
             m_State = EnemyState.Die;
             print("상태 전환 : AnyState -> Die");
-            //Die();
+            Die();
         }
     }
+
+    void Die()
+    {
+        // 진행중인 피격 코루틴 중지
+        StopCoroutine(hitCoroutine);
+
+        // 죽음 상태를 처리하기 위한 코루틴을 실행
+        StartCoroutine(DieProcess());
+    }
+
+    IEnumerator DieProcess()
+    {
+        // 캐릭터 컨틀롤러 컴포넌트를 비활성화
+        cc.enabled = false;
+
+        // 2초 동안 기다린 후에 자기 자신을 제거
+        yield return new WaitForSeconds(2f);
+
+        print("소멸");
+        Destroy(gameObject);
+    }
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -726,3 +751,244 @@ PlayerMove 스크립트에 변수 추가
     {
         hp -= damage;
     }
+	
+	
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+플레이어 체력바 구현
+
+UI > Slider > HP Bar 로 이름 변경 > Handle 필요 없으니 삭제
+위치값 0 -175 0
+       300 50
+
+> Imtercatable 비활성화 > Transition : None (클릭 할 일이 없으니 안씀)
+> Fill Area 위치값 전부 0으로 > Fill 도 전부 0으로
+
+Fill 색상 적용  
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+PlayerMove 스크립트 수정
+
+추가
+using UnityEngine.UI; 
+
+변수 추가
+
+    // 플레이어 체력
+    public int hp = 20;
+    // 플레이어 최대 체력변수
+    int maxHP = 20;
+
+    // hp 슬라이더 변수
+    public Slider hpSlider;
+	
+	
+Update() 수정 (이동속도 아래쪽에 넣기)
+
+        // 현재 플레이어 hp(%)를 hp 슬라이더의 value에 반영
+        hpSlider.value = (float)hp / maxHP;
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+적 HP 바 생성
+
+Enemy 오브젝트 > UI > Canvas > EnemyCanvas 로 변경
+
+캔바스 랜더모드 World Space 로 설정
+위치값 0,0,0
+      180,80
+	  
+EnemyCanvas 자식오브젝트 로 UI > Slider > 이름 EnemyHpBar 로 변경
+위치값 0, 1.34, 0
+     160, 50
+
+Imtercatable 비활성화, Transition : None
+
+Fill Area 위치값 전부 0
+Fill 도 전부 0
+
+EnemyCanvas 스케일 전부 0.01
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+적 체력바가 카메라 바라보게 스크립트 작성
+
+EnemyCanvas 오브젝트 에 Billboard 스크립트 생성
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class Billboard : MonoBehaviour
+{
+    // public Transform target;
+
+    private void Update()
+    {
+        // 자기 자신의 방향을 카메라의 방향과 일치시킴
+        transform.forward = Camera.main.transform.forward;
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+피격시 이펙트 생성
+
+Canvas 에 자식 오브젝트로 Image > 이름 Hit 로 설정 > 
+앵커포지션 스트래치 스트래치
+위치값 0,0,0,
+      0,0
+	  
+색상 255, 0, 0, 130
+
+PlayerMove 스크립트 수정
+
+
+using 추가
+
+using UnityEngine.UI;
+
+변수 추가
+
+    // hp 슬라이더 변수
+    public Slider hpSlider;
+
+    // hit 효과 오브젝트
+    public GameObject hitEffect;
+
+	
+코루틴 추가 및 매소드 수정
+
+    // 플레이어의 피격 함수
+    public void DamageAction(int damage)
+    {// 에너미의 공격력만큼 체력을 깎음
+        hp -= damage;
+
+        // 피격 이펙트 코루틴을 시작
+        StartCoroutine(PlayerHitEffect());
+    }
+
+    IEnumerator PlayerHitEffect()
+    {
+        // 피격 UI 를 활성화
+        hitEffect.SetActive(true);
+
+        // 0.3 초간 대기
+        yield return new WaitForSeconds(0.3f);
+
+        // 피격 UI 비활성화
+        hitEffect.SetActive(false);
+    }
+	
+	참조 연결
+	
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+게임 상태 표시하기
+
+레디 상태 > 2초 준비 > 고! > 0.5초 > 게임 시작
+
+빈오브젝트 생성 > 위치값 초기화 > GameManager 로 변경
+
+Canvas 에 UI > Legacy > Text > Text_GameState 로 설정
+위치값 0,0,0
+      450,100
+
+텍스트 설정
+폰트 스타일 Bold, 크기 70, 가운데 정렬
+
+
+GameManager 스크립트 생성
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+
+public class GameManager : MonoBehaviour
+{
+    // 싱글톤 변수
+    public static GameManager gm;
+
+    private void Awake()
+    {
+        if (gm == null)
+        {
+            gm = this;
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
+
+    // 게임 상태 상수
+    public enum GameState
+    {
+        Ready,
+        Run,
+        GameOver,
+    }
+
+    // 현재 게임 상태 변수
+    public GameState gState;
+
+    // 게임상태 UI 오브젝트 변수
+    public GameObject gameLabel;
+    // 게임 상태 UI 텍스트 컴포넌트 변수
+    Text gameText;
+
+    private void Start()
+    {
+        // 초기 게임 상태를 준비 상태로 설정
+        gState = GameState.Ready;
+
+        // 게임 상태 UI 오브젝트에서 Text 컴포넌트를 가져옴
+        gameText = gameLabel.GetComponent<Text>();
+
+        // 상태 텍스트의 내용을 'Ready...' 로 설정
+        gameText.text = "Ready...";
+
+        // 상태 텍스트의 색상을 주황색으로 설정
+        gameText.color = new Color32(255, 185, 0, 255);
+
+        // 게임 준비 -> 게임중으로 상태 전환
+        StartCoroutine(ReadyToStart());
+    }
+    IEnumerator ReadyToStart()
+    {
+        // 2초간 대기
+        yield return new WaitForSeconds(2f);
+
+        // 상태 텍스트의 내용을 "Go!" 로 변경
+        gameText.text = "Go!";
+
+        //0.5초 대기
+        yield return new WaitForSeconds(0.5f);
+
+        // 상태 텍스트 비활성화
+        gameLabel.SetActive(false);
+
+        // 상태를 '게임중' 으로 변경
+        gState = GameState.Run;
+    }
+}
+
+
+GameManager 오브젝트 Game Label 에 참조 연결(Text_GameState)
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+게임중 상태가 아닐시 조작 불가
+
+CamRotate, PlayerRotate, PlayerFire, PlayerMove
+ 스크립트 의 Update() 메소드 최상단에
+        
+// 게임 상태가 '게임중' 상태 일 때만 조작할 수 있게 함
+if (GameManager.gm.gState != GameManager.GameState.Run)
+	return;
+	
+추가

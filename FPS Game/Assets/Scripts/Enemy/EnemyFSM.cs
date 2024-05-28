@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+
 
 public class EnemyFSM : MonoBehaviour
 {
@@ -14,6 +16,8 @@ public class EnemyFSM : MonoBehaviour
         Damaged,
         Die,
     }
+
+    Coroutine hitCoroutine;
 
     //에너미 상태 변수
     EnemyState m_State;
@@ -50,6 +54,9 @@ public class EnemyFSM : MonoBehaviour
     // 에너미의 최대 체력
     int maxHp = 15;
 
+    // hp 슬라이더 변수
+    public Slider hpSlider;
+
     private void Start()
     {
         // 최초의 에너미 상태를 대기 상태로
@@ -70,6 +77,9 @@ public class EnemyFSM : MonoBehaviour
     {
         // 현재 상태 를 체크해 상태에 따라 메소드 호출
         CheckState();
+
+        // 현재 hp(%)를 슬라이더의 value 에 반영
+        hpSlider.value = (float)hp / maxHp;
     }
 
     void CheckState()
@@ -90,7 +100,7 @@ public class EnemyFSM : MonoBehaviour
                 Return();
                 break;
             case EnemyState.Damaged:
-                // Damaged();
+                // Damaged(); 주석 제거 안함
                 break;
             case EnemyState.Die:
                 // Die();
@@ -187,7 +197,7 @@ public class EnemyFSM : MonoBehaviour
     void Damaged()
     {
         // 피격 상태를 처리하기 위한 코루틴 실행
-        StartCoroutine(DamagedProcess());
+        hitCoroutine = StartCoroutine(DamagedProcess());
     }
 
     // 데미지 처리용 코루틴 함수
@@ -202,6 +212,7 @@ public class EnemyFSM : MonoBehaviour
     }
 
     // 데미지 실행 함수
+    // 플레이어 파이어 쪽에서 호출
     public void HitEnemy(int hitPower)
     {
         // 만일, 이미 피격 상태 이거나 사망 상태 또는 복귀 상태라면
@@ -227,7 +238,28 @@ public class EnemyFSM : MonoBehaviour
         {
             m_State = EnemyState.Die;
             print("상태 전환 : AnyState -> Die");
-            //Die();
+            Die();
         }
+    }
+
+    void Die()
+    {
+        // 진행중인 피격 코루틴 중지
+        StopCoroutine(hitCoroutine);
+
+        // 죽음 상태를 처리하기 위한 코루틴을 실행
+        StartCoroutine(DieProcess());
+    }
+
+    IEnumerator DieProcess()
+    {
+        // 캐릭터 컨틀롤러 컴포넌트를 비활성화
+        cc.enabled = false;
+
+        // 2초 동안 기다린 후에 자기 자신을 제거
+        yield return new WaitForSeconds(2f);
+
+        print("소멸");
+        Destroy(gameObject);
     }
 }

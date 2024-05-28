@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PlayerMove : MonoBehaviour
 {
@@ -25,6 +26,14 @@ public class PlayerMove : MonoBehaviour
 
     // 플레이어 체력
     public int hp = 20;
+    // 플레이어 최대 체력변수
+    int maxHP = 20;
+
+    // hp 슬라이더 변수
+    public Slider hpSlider;
+
+    // hit 효과 오브젝트
+    public GameObject hitEffect;
 
     private void Start()
     {
@@ -33,6 +42,10 @@ public class PlayerMove : MonoBehaviour
 
     private void Update()
     {
+        // 게임 상태가 '게임중' 상태 일 때만 조작할 수 있게 함
+        if (GameManager.gm.gState != GameManager.GameState.Run)
+            return;
+
         // 사용자의 입력을 받음
         float h = Input.GetAxisRaw("Horizontal");
         float v = Input.GetAxisRaw("Vertical");
@@ -72,11 +85,29 @@ public class PlayerMove : MonoBehaviour
 
         // 이동속도에 맞춰 이동
         cc.Move(dir * moveSpeed * Time.deltaTime);
+
+        // 현재 플레이어 hp(%)를 hp 슬라이더의 value에 반영
+        hpSlider.value = (float)hp / maxHP;
     }
 
     // 플레이어의 피격 함수
     public void DamageAction(int damage)
-    {
+    {// 에너미의 공격력만큼 체력을 깎음
         hp -= damage;
+
+        // 피격 이펙트 코루틴을 시작
+        StartCoroutine(PlayerHitEffect());
+    }
+
+    IEnumerator PlayerHitEffect()
+    {
+        // 피격 UI 를 활성화
+        hitEffect.SetActive(true);
+
+        // 0.3 초간 대기
+        yield return new WaitForSeconds(0.3f);
+
+        // 피격 UI 비활성화
+        hitEffect.SetActive(false);
     }
 }
