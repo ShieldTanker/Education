@@ -44,6 +44,7 @@ public class EnemyFSM : MonoBehaviour
 
     // 초기 위치 저장
     Vector3 originPos;
+    Quaternion originRot;
 
     // 이동 가능 위치
     public float moveDistance = 20f;
@@ -56,6 +57,10 @@ public class EnemyFSM : MonoBehaviour
 
     // hp 슬라이더 변수
     public Slider hpSlider;
+
+    // 애니메이터 변수
+    Animator anim;
+
 
     private void Start()
     {
@@ -71,6 +76,10 @@ public class EnemyFSM : MonoBehaviour
 
         // 자신의 초기 위치값 저장
         originPos = transform.position;
+        originRot = transform.rotation;
+
+        // 자식 오브젝트로부터 애니메이터 변수 받아오기
+        anim = GetComponentInChildren<Animator>();
     }
 
     private void Update()
@@ -118,6 +127,9 @@ public class EnemyFSM : MonoBehaviour
         {
             m_State = EnemyState.Move;
             print("상태 전환 : Idle -> Move");
+
+            // 이동 애니메이션으로 전환
+            anim.SetTrigger("idleToMove");
         }
     }
 
@@ -138,8 +150,11 @@ public class EnemyFSM : MonoBehaviour
 
             // 캐릭터 컨트롤러 를 이용해 이동하기
             cc.Move(dir * moveSpeed * Time.deltaTime);
+
+            // 플레이어 향해 방향 전환
+            transform.forward = dir;
         }
-        // 그렇지 않으면
+        // 그렇지 않으면, 현재 상태를 공격(Attack) 으로 전환
         else
         {
             m_State = EnemyState.Attack;
@@ -147,6 +162,9 @@ public class EnemyFSM : MonoBehaviour
 
             //누적 시간을 공격 딜레이 시간만큼 미리 진행시켜 놓음
             currentTime = attackDelay;
+
+            //공격 대기 애니메이션 플레이
+            anim.SetTrigger("moveToAttackDelay");
         }
     }
     
@@ -159,9 +177,12 @@ public class EnemyFSM : MonoBehaviour
             currentTime += Time.deltaTime;
             if (currentTime > attackDelay)
             {
-                player.GetComponent<PlayerMove>().DamageAction(attackPower);
+                // player.GetComponent<PlayerMove>().DamageAction(attackPower);
                 print("공격");
                 currentTime = 0f;
+
+                // 공격 애니메이션 실행
+                anim.SetTrigger("startAttack");
             }
         }
         // 그렇지 않다면, 현재 상태를 이동으로 전환(재추격)
@@ -170,7 +191,16 @@ public class EnemyFSM : MonoBehaviour
             m_State = EnemyState.Move;
             print("상태 전환 : Attack -> Move");
             currentTime = 0f;
+
+            // 공격 상태에서 이동상태로 전환
+            anim.SetTrigger("attackToMove");
         }
+    }
+
+    // 플레이어의 스크립트의 데미지 처리 함수를 실행
+    public void AttackAction()
+    {
+        player.GetComponent<PlayerMove>().DamageAction(attackPower);
     }
 
     void Return()
@@ -180,17 +210,24 @@ public class EnemyFSM : MonoBehaviour
         {
             Vector3 dir = (originPos - transform.position).normalized;
             cc.Move(dir * moveSpeed * Time.deltaTime);
+
+            // 복귀 지점으로 방향 전환 
+            transform.forward = dir;
         }
         // 그렇지 않다면, 자신의 위치를 초기 위치로 조정하고 현재상태를 대기로 전환
         else
         {
             transform.position = originPos;
+            transform.rotation = originRot;
 
             // hp 를 다시 회복
             hp = maxHp;
 
             m_State = EnemyState.Idle;
             print("상태 전환 : Return -> Idle");
+
+            // 대기 애니메이션 재생
+            anim.SetTrigger("moveToIdle");
         }
     }
 
