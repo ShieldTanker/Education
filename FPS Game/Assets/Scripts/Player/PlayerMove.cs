@@ -35,9 +35,16 @@ public class PlayerMove : MonoBehaviour
     // hit 효과 오브젝트
     public GameObject hitEffect;
 
+    // 애니메이터 변수
+    Animator anim;
+
     private void Start()
     {
+        // 캐릭터 컨트롤러 컴포넌트 받아오기
         cc = GetComponent<CharacterController>();
+
+        // 자식 오브젝트의 애니메이터 받아오기
+        anim = GetComponentInChildren<Animator>();
     }
 
     private void Update()
@@ -52,7 +59,12 @@ public class PlayerMove : MonoBehaviour
 
         // 이동 방향을 설정
         Vector3 dir = new Vector3(h, 0, v);
+        // nomalized : 벡터의 방향으로 값을 1로
         dir = dir.normalized;
+
+        // 이동 블랜딩 트리를 호출하고 벡터의 크기 값을 넘겨줌(블랜드 트리의 파라메터는 float임)
+        // magnitude : 벡터의 길이
+        anim.SetFloat("moveMotion", dir.magnitude);
 
         // 메인 카메라를 기준으로 방향을 추가로 변환(Translate 말고 이방법도 있음)
         // 문제는 하늘을 바라보면 위로 떠버림

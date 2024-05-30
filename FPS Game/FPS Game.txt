@@ -1053,6 +1053,8 @@ Enemy 오브젝트의 Character Controller
 
 좀비 애니메이션 적용
 
+애니메이터 뷰 설정
+
 프로젝트뷰 Animations 폴더 추가 > Animator Controller 생성 
 > Zombie Anim 으로 이름 설정
 
@@ -1064,3 +1066,516 @@ Enemy 오브젝트의 Character Controller
 모션 자체에서 위치값이 바뀌는경우 Root Transform 체크 해제 하면 됨
 
 Idle > Move 로 트랜지션 생성 > 파라메터 Trigger 생성 > idleToMove 로 설정
+
+Move > Idle 로 트랜지션 생성 > Trigger 생성 > moveToIdle 로 설정
+
+
+새 스테이트 2개 생성 > 각각 Attack, AttackDelay 로 설정
+> Move 에서 AttackDelay 로 트랜지션 생성 > Trigger 생성 > moveToAttackDelay 로 설정
+> Has Exit Time 설정 해제
+
+AttackDelay 에서 Move 로 트랜지션 생성 > Trigger 생성 > attackToMove 로 설정
+> Has Exit Time 설정 해제
+
+
+> AttackDelay 에서 Attack 으로 트랜지션 생성 > Trigger 생성 > startAttack 으로 설정
+> Has Exit Time 설정 해제
+
+Attack 에서 AttackDelay 로 가는 트랜지션 생성 > 파라매터 없음, Has Exit Time 활성화
+
+Attack 에서 Move 로 가는 트랜지션 생성 > attackToMove 
+> Has Exit Time 설정 해제
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+스크립트 수정
+
+EnemyFSM 스크립트 수정
+
+변수 추가
+
+    // 애니메이터 변수
+    Animator anim;
+
+
+Start() 매소드 수정
+
+
+    private void Start()
+    {
+        // 최초의 에너미 상태를 대기 상태로
+        m_State = EnemyState.Idle;
+
+        /* 플레이어 의 트랜트폼 컴포넌트 받아오기
+           (오브젝트가 게임 중간에 생성 되기에 미리 참조연결 할 수 없음)  */
+        player = GameObject.Find("Player").transform;
+
+        // 캐릭터 컴포넌트 불러오기
+        cc = GetComponent<CharacterController>();
+
+        // 자신의 초기 위치값 저장
+        originPos = transform.position;
+        originRot = transform.rotation;
+
+        // 자식 오브젝트로부터 애니메이터 변수 받아오기
+        anim = GetComponentInChildren<Animator>();
+    }
+	
+	
+각 상태에 맞는 메소드 수정
+
+    void Idle()
+    {
+        // 만일, 플레이어 와 의 거리가 액션 범위 내라면 Move 로 전환
+        if (Vector3.Distance(transform.position, player.position) <= findDistance)
+        {
+            m_State = EnemyState.Move;
+            print("상태 전환 : Idle -> Move");
+// 수정된 부분
+            // 이동 애니메이션으로 전환
+            anim.SetTrigger("idleToMove");
+        }
+    }
+	
+	
+    void Move()
+    {
+        // 만일, 현재 위치가 초기 위치에서 이동 가능 범위를 넘어간다면
+        if (Vector3.Distance(transform.position, originPos) > moveDistance)
+        {
+            // 현재 상태를 복귀(Return) 으로 전환
+            m_State = EnemyState.Return;
+            print("상태 전환 : Move -> Return");
+        }
+        // 만일, 플레이어 와 의 거리가 공격 범위 밖 이라면 플레이어를 향해 이동
+        else if (Vector3.Distance(transform.position, player.position) >= attackDistance)
+        {
+            // 이동 방향 설정
+            Vector3 dir = (player.position - transform.position).normalized;
+
+            // 캐릭터 컨트롤러 를 이용해 이동하기
+            cc.Move(dir * moveSpeed * Time.deltaTime);
+
+
+// 수정된 부분 (바라보는 방향)
+            // 플레이어 향해 방향 전환
+            transform.forward = dir;
+        }
+        // 그렇지 않으면, 현재 상태를 공격(Attack) 으로 전환
+        else
+        {
+            m_State = EnemyState.Attack;
+            print("상태 전환 : Move -> Attack");
+
+            //누적 시간을 공격 딜레이 시간만큼 미리 진행시켜 놓음
+            currentTime = attackDelay;
+
+// 수정된 부분
+            //공격 대기 애니메이션 플레이
+            anim.SetTrigger("moveToAttackDelay");
+        }
+    }
+	
+	
+	    void Attack()
+    {
+        // 만일, 플레이어가 공격 범위 이내에 있다면 플레이어를 공격
+        if (Vector3.Distance(transform.position, player.position)< attackDistance)
+        {
+            // 일정한 시간마다 플레이어를 공격
+            currentTime += Time.deltaTime;
+            if (currentTime > attackDelay)
+            {
+			
+// 수정된 부분 (애니메이션에서 플레이어 피격함수 호출)
+                // player.GetComponent<PlayerMove>().DamageAction(attackPower);
+                print("공격");
+                currentTime = 0f;
+// 수정된 부분
+                // 공격 애니메이션 실행
+                anim.SetTrigger("startAttack");
+            }
+        }
+        // 그렇지 않다면, 현재 상태를 이동으로 전환(재추격)
+        else
+        {
+            m_State = EnemyState.Move;
+            print("상태 전환 : Attack -> Move");
+            currentTime = 0f;
+// 수정된 부분
+            // 공격 상태에서 이동상태로 전환
+            anim.SetTrigger("attackToMove");
+        }
+    }
+	
+// 자식오브젝트의 애니메이션 에서 이벤트로 불러올수있게 함수 생성
+	    public void AttackAction()
+    {
+        player.GetComponent<PlayerMove>().DamageAction(attackPower);
+    }
+
+	
+    void Return()
+    {
+        // 만일, 초기 위치에서 거리가 0.1f 이상이라면 초기 위치 쪽으로 이동
+        if (Vector3.Distance(transform.position, originPos) > 0.1f)
+        {
+            Vector3 dir = (originPos - transform.position).normalized;
+            cc.Move(dir * moveSpeed * Time.deltaTime);
+
+// 수정된 부분(복귀시 방향 전환)
+            // 복귀 지점으로 방향 전환 
+            transform.forward = dir;
+        }
+        // 그렇지 않다면, 자신의 위치를 초기 위치로 조정하고 현재상태를 대기로 전환
+        else
+        {
+            transform.position = originPos;
+            transform.rotation = originRot;
+
+            // hp 를 다시 회복
+            hp = maxHp;
+
+            m_State = EnemyState.Idle;
+            print("상태 전환 : Return -> Idle");
+// 수정된 부분
+            // 대기 애니메이션 재생
+            anim.SetTrigger("moveToIdle");
+        }
+    }
+	
+	
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+피격시 애니메이션 구현
+
+애니메이터뷰 에서 새 상태 생성 > Damaged 로 설정
+
+에셋 다운로드(Zombie Reaction Hit.FBX) 
+기존의 에셋스토어에서 받은 에셋은 피격 애니메이션이 없음
+
+파일을 Zombie 폴더 안에 넣기 (Mixamo 에서 다운받았기 때문에 이름 변경 필요)
+
+Zombie Reaction Hit 클릭 > 인스펙터뷰에 Rig > 애니메이션 타입을 Humanoid 로 변경
+
+Zombie Reaction Hit 클릭 > 인스펙터뷰 Animation 
+> 중간쯤 Mixamo 이름을 ZombieHit 으로 변경(자동으로 애니메이션 이름이 바뀜)
+
+애니메이터뷰 Damaged 상태에 ZombieHit 애니메이션 넣기
+> AnyState 에서 Damaged 로 가는 트랜지션 생성 > Trigger 생성 > damaged 로 설정
+Damaged 에서 Move 로 가는 트랜지션 생성 > 조건 없음 > Has Exit Time 체크 해제 안함
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+스크립트 수정
+
+EnemyFSM 수정 
+
+피격시 실행될 매소드 HitEnemy() 매소드 수정
+
+    // 데미지 실행 함수
+    // 플레이어 파이어 쪽에서 호출
+    public void HitEnemy(int hitPower)
+    {
+        // 만일, 이미 피격 상태 이거나 사망 상태 또는 복귀 상태라면
+        // 아무 처리 하지않고 함수 종료
+        if (m_State == EnemyState.Damaged || m_State == EnemyState.Die ||
+            m_State == EnemyState.Return)
+        {
+            return;
+        }
+
+        // 플레이어의 공격력 만큼 에너미의 체력을 감소시킴
+        hp -= hitPower;
+
+        // 에너미의 체력이 0보다 크면 피격 상태로 전환
+        if (hp > 0)
+        {
+            m_State = EnemyState.Damaged;
+            print("상태 전환 : AnyState -> Damaged");
+// 수정된 부분
+            // 피격 애니메이션을 플레이
+            anim.SetTrigger("damaged");
+
+            Damaged();
+        }
+        // 그렇지 않다면 죽음 상태로 전환
+        else
+        {
+            m_State = EnemyState.Die;
+            print("상태 전환 : AnyState -> Die");
+            Die();
+        }
+    }
+	
+	
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+피격 애니메이션 진행중 이어도 이동하는 문제가 생김
+
+간단한 방법으로는 애니메이션 속도를 증가 시킴
+Damaged 상태의 스피드 값을 2로 증가 시킴
+
+그런데도 이동하는 문제가 생김
+ZombieHit 애니메이션이 30프레임 에 1초 인 애니메이션 임
+
+
+    // 데미지 처리용 코루틴 함수
+    IEnumerator DamagedProcess()
+    {
+// 수정된 부분(0.5f 에서 1f 로 변경)
+        // 피격 모션 시간만큼 기다림
+        yield return new WaitForSeconds(1f);
+
+        // 현재 상태를 이동 상태로 전환
+        m_State = EnemyState.Move;
+        print("상태 전환 : Damaged -> Move");
+    }
+	
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Die 애니메이션 추가
+
+애니메이터뷰 에 새 상태 Die 추가
+
+AnyState 에서 Die 로가는 트랜지션 생성 > Trigger 생성 > die
+
+
+EnemyFSM 스크립트 수정
+
+Die() 메소드를 불러오는 HitEnemy() 메소드 수정
+
+    // 데미지 실행 함수
+    // 플레이어 파이어 쪽에서 호출
+    public void HitEnemy(int hitPower)
+    {
+        // 만일, 이미 피격 상태 이거나 사망 상태 또는 복귀 상태라면
+        // 아무 처리 하지않고 함수 종료
+        if (m_State == EnemyState.Damaged || m_State == EnemyState.Die ||
+            m_State == EnemyState.Return)
+        {
+            return;
+        }
+
+        // 플레이어의 공격력 만큼 에너미의 체력을 감소시킴
+        hp -= hitPower;
+
+        // 에너미의 체력이 0보다 크면 피격 상태로 전환
+        if (hp > 0)
+        {
+            m_State = EnemyState.Damaged;
+            print("상태 전환 : AnyState -> Damaged");
+
+            // 피격 애니메이션을 플레이
+            anim.SetTrigger("damaged");
+
+            Damaged();
+        }
+        // 그렇지 않다면 죽음 상태로 전환
+        else
+        {
+            m_State = EnemyState.Die;
+            print("상태 전환 : AnyState -> Die");
+// 수정된 부분
+            // 죽음 애니메이션 재생
+            anim.SetTrigger("die");
+
+            Die();
+        }
+    }
+	
+	
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+플레이어의 모델링 변경
+
+에셋 스토어 Soldier 검색
+
+모션을 따로 변경하지 않을 예정이라 휴머노이드로 변경 안함
+
+Legacy : 리타겟팅 불가 , 스크립팅 불가
+Generic : 리타겟팅 불가 , 스크립팅 가능
+Humanoid : 리타겟팅 가능, 스크립팅 가능
+
+Soldier_demo 를 Player 오브젝트의 자식 오브젝트 로 추가
+위치값 y만 -1 넣기
+
+좀비 오브젝트와 비교했을때 크기 차이가 많이남
+
+프로젝트뷰 Soldier_demo 클릭 인스펙터뷰 Model 
+> Scale Factor 값 0.7 로 변경 (이미 오브젝트로 만들어도 같이 크기 변경됨)
+
+Player 오브젝트의 Mesh Renderer 체크 해제
+
+Character Controller 값 변경
+센터값 0, 0.06, 0
+      0.4, 1.8
+
+Skin Width : 기본 충돌영역(콜라이더) 에서 값만큼 더 감지범위 확장(물리 효과는 없음, 감지만함)
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+프로젝트뷰 Animations 폴더에 애니메이션 생성 > Soldier Anim 으로 설정
+
+Player 오브젝트 의 자식오브젝트 의 Soldier_demo 에 적용
+
+Soldier Anim 에 다운받은 에셋 의 Animation 인 demo_combat_idle 을 끌어넣기
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+실행 했을때 카메라 위치 수정이 필요할수 있음
+
+실행 시킨뒤 캠 조정 후 값을 기억했다 수정
+
+CamPosition 값을 0.08, 0.55, 0.2
+
+MainCamera 의 Camera 컴포넌트 > Clipping Planes 수정(실제로 보이는 구간)
+값 0.15, 1000
+
+////////////////////////////////////////////////////////////////////////////////
+
+블랜드 트리
+
+값에 따라 애니메이션 처리
+
+Soldier Anim 선택 > 우클릭 New State > New BlendTree > MoveBlend 로 설정
+
+더블클릭으로 들어간뒤 Blend Tree 선택 > 인스펙터뷰 Motion 에 + 를 눌러 Add MotionmField
+총 2개의 모션 필드 생성
+
+각각 모션에 다운받은 에셋의 모션 Idle, Run 넣기
+
+블렌드 트리로 Idle 모션과 Run 모션 왔다갔다 할수 있으니 기존의 Idle 모션은 필요 없어짐
+
+기존의 Idle 모션 제거 후 추가한 MoveBlend 를 기본 스테이트로 설정
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+PlayerMove 스크립트 수정
+
+변수 추가
+
+    // 애니메이터 변수
+    Animator anim;
+
+Start() 수정
+
+    private void Start()
+    {
+        // 캐릭터 컨트롤러 컴포넌트 받아오기
+        cc = GetComponent<CharacterController>();
+
+        // 자식 오브젝트의 애니메이터 받아오기
+        anim = GetComponentInChildren<Animator>();
+    }
+
+Update() 수정
+
+    private void Update()
+    {
+        // 게임 상태가 '게임중' 상태 일 때만 조작할 수 있게 함
+        if (GameManager.gm.gState != GameManager.GameState.Run)
+            return;
+
+        // 사용자의 입력을 받음
+        float h = Input.GetAxisRaw("Horizontal");
+        float v = Input.GetAxisRaw("Vertical");
+
+        // 이동 방향을 설정
+        Vector3 dir = new Vector3(h, 0, v);
+        // nomalized : 벡터의 방향으로 값을 1로
+        dir = dir.normalized;
+
+        // 이동 블랜딩 트리를 호출하고 벡터의 크기 값을 넘겨줌(블랜드 트리의 파라메터는 float임)
+        // magnitude : 벡터의 길이
+        anim.SetFloat("moveMotion", dir.magnitude);
+
+        // 메인 카메라를 기준으로 방향을 추가로 변환(Translate 말고 이방법도 있음)
+        // 문제는 하늘을 바라보면 위로 떠버림
+        dir = Camera.main.transform.TransformDirection(dir);
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+공격 애니메이션 추가
+
+애니메이터뷰 에 공격 애니메이션 demo_combat_shoot 넣기
+
+MoveBlend 에서 Attack 으로 가는 트랜지션 생성 > Trigger 생성 > attack 으로 설정
+> Has Exit Time 체크 해제
+
+Attack 에서 MoveBlend 로 가는 트랜지션 생성 > 파라매터 없음 Has Exit Time 체크해제 안함
+
+
+PlayerFire 스크립트 수정
+
+변수 추가
+
+// 애니메이터 변수
+    Animator anim;
+	
+
+Start() 수정
+
+private void Start()
+    {
+        // 피격 이펙트 오브젝트에서 파티클 시스템 컴포넌트 가져오기
+        ps = bulletEffect.GetComponent<ParticleSystem>();
+// 수정된 부분
+        // 자식오브젝트의 애니메이터 불러오기
+        anim = GetComponentInChildren<Animator>();
+    }
+	
+	
+Update() 수정
+
+        // 마우스 왼쪽 버튼을 입력
+        if (Input.GetMouseButtonDown(0))
+        {
+// 수정된 부분
+            // 만일 이동 블랜드 트리 파라미터의 값이 0 이라면, 공격 애니메이션 실시
+            if (anim.GetFloat("moveMotion") == 0)
+            {
+                anim.SetTrigger("attack");
+            }
+
+            // 레이를 생성한 후 발사될 위치와 진행 방향을 설정
+            Ray ray = new Ray(
+                Camera.main.transform.position,
+                Camera.main.transform.forward);
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+플레이어 사망시 움직이는 애니메이션 안하게 수정
+
+
+GameManager 스크립트 수정
+
+private void Update()
+    {
+        // 만일, 플레이어의 hp 가 0 이하라면
+        if (player.hp <= 0)
+        {
+// 수정된 부분     
+	        // 플레이어의 애니메이션을 멈춤
+            player.GetComponentInChildren<Animator>().SetFloat("moveMotion", 0f);
+            
+            // 상태 텍스트를 활성화
+            gameLabel.SetActive(true);
+
+            //상태 텍스트의 내용을 'GameOver' 로 설정
+            gameText.text = "GameOver";
+
+            // 상태 텍스트의 색상을 빨강으로 설정
+            gameText.color = new Color32(255, 0, 0, 255);
+
+            // 상태를 '게임 오버' 상태로 변경
+            gState = GameState.GameOver;
+        }
+    }
+	
+	
+	
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

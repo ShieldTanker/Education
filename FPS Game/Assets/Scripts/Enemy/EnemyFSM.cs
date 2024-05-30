@@ -109,10 +109,10 @@ public class EnemyFSM : MonoBehaviour
                 Return();
                 break;
             case EnemyState.Damaged:
-                // Damaged(); 주석 제거 안함
+                // Damaged(); HitEnemy() 에서 불러오기에 주석 제거 안함
                 break;
             case EnemyState.Die:
-                // Die();
+                // Die(); HitEnemy() 에서 불러오기에 주석 제거 안함
                 break;
 
             default:
@@ -241,7 +241,7 @@ public class EnemyFSM : MonoBehaviour
     IEnumerator DamagedProcess()
     {
         // 피격 모션 시간만큼 기다림
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSeconds(1f);
 
         // 현재 상태를 이동 상태로 전환
         m_State = EnemyState.Move;
@@ -268,6 +268,10 @@ public class EnemyFSM : MonoBehaviour
         {
             m_State = EnemyState.Damaged;
             print("상태 전환 : AnyState -> Damaged");
+
+            // 피격 애니메이션을 플레이
+            anim.SetTrigger("damaged");
+
             Damaged();
         }
         // 그렇지 않다면 죽음 상태로 전환
@@ -275,6 +279,10 @@ public class EnemyFSM : MonoBehaviour
         {
             m_State = EnemyState.Die;
             print("상태 전환 : AnyState -> Die");
+
+            // 죽음 애니메이션 재생
+            anim.SetTrigger("die");
+
             Die();
         }
     }
