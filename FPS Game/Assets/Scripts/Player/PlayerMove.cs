@@ -97,15 +97,15 @@ public class PlayerMove : MonoBehaviour
 
         // 이동속도에 맞춰 이동
         cc.Move(dir * moveSpeed * Time.deltaTime);
-
-        // 현재 플레이어 hp(%)를 hp 슬라이더의 value에 반영
-        hpSlider.value = (float)hp / maxHP;
     }
 
     // 플레이어의 피격 함수
     public void DamageAction(int damage)
     {// 에너미의 공격력만큼 체력을 깎음
         hp -= damage;
+
+        // 현재 플레이어 hp(%)를 hp 슬라이더의 value에 반영
+        hpSlider.value = (float)hp / maxHP;
 
         // 피격 이펙트 코루틴을 시작
         StartCoroutine(PlayerHitEffect());
