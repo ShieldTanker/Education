@@ -2552,3 +2552,280 @@ GameManager 스크립트 수정
         // 로딩 화면 씬을 로드
         SceneManager.LoadScene(1);
     }
+	
+	
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+UI 레이아웃
+Main 씬 의 Canvas 오브젝트의 Canvas Scaler 1920 1080 설정
+
+카페 에서 에셋 다운
+
+IMG_Crosshair 타입을 스프라이트 로 설정
+CrossHair 오브젝트 의 소스이미지 교체,
+Width 값 100, Height 값 100
+
+IMG_Hpbar, IMG_Hpbar_bg 타입 스프라이트 로 변경
+9슬라이스 하기(패키지 없다면 Window > Package Manager > 2D Sprite 다운)
+
+IMG_Hpbar_bg 9슬라이스 값 10,10,10,10
+HpBar 오브젝트의 Background 에 넣기
+
+IMG_Hpbar 를 Fill 에 넣기 > Fill Area 값 2, 2, 2, 2 (Pos Z 값 0)
+
+
+EnemyHpBar 의 Background, Fill 의 이미지를 IMG_Hpbar 로 설정
+Slider 값 을 0, -10, 0
+               80, 10
+			   
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+IMG_Crosshair02, Weapon01_gun, Weapon02_sniper 텍스처 타입 스프라이트 로 설정
+
+Text_WeaponMode 앵커포지션 바텀 센터 > 피벗 0.5, 0
+위치값 -150, 75, 0
+          200, 30
+Best Fit 활성
+
+Beat Fit : Min 값 아래로 폰트사이즈 안내려감, Max 값 이상으로 폰트사이즈 안올라감
+
+Canvas 의 자식오브젝트 > UI > Image > Weapon01
+앵커포지션 바텀 센터 > 피벗 0.5, 0 
+
+위치값 100, 75, 0
+        300, 100
+		
+Weapon01_gun 이미지 넣기
+
+Weapon01 복제 후 Weapon02_sniper 이미지 넣기
+
+CrossHair 오브젝트 이름 CrossHair01 로 바꾸고 복제 > CrossHair02 로 설정
+CrossHair02 의 이미지를 IMG_Crosshair02 로 교체
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+PlayerFire 스크립트 수정
+
+변수 추가
+
+    // 무기 아이콘 스프라이트 변수
+    public GameObject weapon01;
+    public GameObject weapon02;
+
+    // 크로스헤어 스프라이트 변수
+    public GameObject crossHair01;
+    public GameObject crossHair02;
+	
+
+Update() 수정
+        // 만일 키보드의 숫자 1번 입력을 받으면, 무기 모드를 일반 모트로 변경
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+        {
+            wMode = WeaponMode.Normal;
+
+            // 일반 모드 텍스트 출력
+            wModeText.text = "Normal Mode";
+
+            // 카메라의 화면을 다시 원래대로 돌려줌
+            Camera.main.fieldOfView = 60;
+            zoomMode = false;
+
+            // 1번 스프라이트는 활성화, 2번 스프라이트는 비활성화
+            weapon01.SetActive(true);
+            crossHair01.SetActive(true);
+
+            weapon02.SetActive(false);
+            crossHair02.SetActive(false);
+        }
+        // 만일 키보드의 숫자 2번입력을 받으면, 무기 모드를 스나이퍼 모드로 변경
+        else if (Input.GetKeyDown(KeyCode.Alpha2))
+        {
+            wMode = WeaponMode.Sniper;
+
+            // 스나이퍼 모드 텍스트 출력
+            wModeText.text = "Sniper Mode";
+
+            // 2번 스프라이트는 활성화, 1번 스프라이트는 비활성화
+            weapon02.SetActive(true);
+            crossHair02.SetActive(true);
+
+            weapon01.SetActive(false);
+            crossHair01.SetActive(false);
+        }
+		
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Weapon01_R_Grenade, Weapon02_R_Sniper 타입 스프라이트 로 설정
+
+Weapon01 복제 Weapon01_R 로 설정
+위치값 320, 25, 0
+          70, 90
+
+Weapon01_R_Grenade 이미지 넣기
+
+Weapon01_R 복제 Weapon02_R 로 설정 > Weapon02_R_Sniper 이미지 넣기
+Width 값 90, Height 값 90
+
+
+PlayerFire 스크립트 수정
+
+변수추가
+
+    // 마우스 오른쪽 버튼 클릭 아이콘 스프라이트 변수
+    public GameObject weapon01_R;
+    public GameObject weapon02_R;
+
+
+Update() 수정한 자리
+
+// 1번 스프라이트는 활성화, 2번 스프라이트는 비활성화
+            weapon01.SetActive(true);
+            weapon01_R.SetActive(true);
+            crossHair01.SetActive(true);
+
+            weapon02.SetActive(false);
+            weapon02_R.SetActive(false);
+            crossHair02.SetActive(false);
+			
+반대도 마찬가지 수정
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Canvas > UI > Image > BG 로 설정
+앵커포지션, 피벗 0.5, 0
+위치값    56, 15, 0
+          670, 180
+색상 검은색, 알파값 50
+
+BG 를 Canvas 최상단에 위치
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+스나이퍼 조준시 바깥쪽 안보이게 처리
+
+IMG_SniperZoom 타입 스프라이트로
+
+Canvas > UI > Image > Crosshair02_zoom > IMG_SniperZoom 이미지 넣기
+Canvas 최상단 배치
+
+PlayerFire 스크립트 수정
+
+변수 추가
+
+    // 마우스 오른쪽 버튼 클릭 줌 모드 스프라이트 변수
+    public GameObject crosshair02_zoom;
+	
+	
+switch 문 수정	
+
+                case WeaponMode.Sniper:
+                    // 만일, 줌 모드 상태가 아니라면 카메라를 확대 하고 줌 모드 상태로 변경
+                    if (!zoomMode)
+                    {
+                        Camera.main.fieldOfView = 15f;
+                        zoomMode = true;
+
+                        // 줌 모드 일때 크로스헤어를 변경
+                        crosshair02_zoom.SetActive(true);
+                        crossHair02.SetActive(false);
+                    }
+                    else
+                    {
+                        Camera.main.fieldOfView = 60f;
+                        zoomMode = false;
+
+                        // 크로스헤어를 스나이퍼 모드로 돌려놓기 
+                        crosshair02_zoom.SetActive(false);
+                        crossHair02.SetActive(true);
+                    }
+					
+
+if 문 수정
+
+        // 만일 키보드의 숫자 1번 입력을 받으면, 무기 모드를 일반 모트로 변경
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+        {
+            // 스나이퍼 모드에서 일반 모드 키를 눌렀을때 Weapone01_R_zoom 은 비활성화
+            crosshair02_zoom.SetActive(false);
+            zoomMode = false;
+			
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+마테리얼
+
+
+프로젝트뷰 폴더 생성 > Art > Material 생성 > Mat_Basic 으로 설정
+
+Albedo : 물체가 지니는 기본색
+
+Metallic : 금속 성분을 나타냄 (0 : 비금속 ~ 1 : 금속)
+           비금속 : 빛을 반사 시킬때 조명의 컬러를 더많 이 반사
+		     금속 : 빛을 반사 시킬때 물체의 컬러를 더 많이 반사
+
+Smoothness : 표면의 거친 정도를 표현(손으로 만지는 것보다 훨실 미세한 수준을 뜻함)
+
+
+Normal Map 노멀 맵
+
+리얼타임 렌더링인 유니티에서는 많은수 의 폴리곤(입체) 데이터를 처리하기 곤란
+
+폴리곤의 개수를 적게 초기화 하는 대신 디테일한 정보를 텍스쳐로 만듦(텍스쳐 베이킹)
+
+단순한 외형에 Normal Map 이라는 정보를 덧씌워 컴퓨터에게 표면에 디테일한 입체정보가
+있는것처럼 착시를 줌
+
+외형은 바뀌지않지만 조명의 위치나 각도에 따라 음영이 바뀜
+
+
+프로젝트뷰 검색칸에 Normal Map 검색(푸른색 을 띄는게 노멀맵용 텍스처)
+Material 안에 Normal Map 옆에 연결
+
+유니티에 텍스쳐(그림파일) 을 임포트하면 최초 세팅은 Defualt 임
+노멀맵으로 사용하려면 테스쳐 타입을 노멀맵으로 변경해야함
+
+
+Emission(이미션) 스스로 빛을 나타내게 하는 표현을 할때 사용
+포스트 프로세싱의 블룸 을 같이 사용하면 빛번짐 극대화 가능
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+파티클 시스템
+
+시간 관련 옵션들 : 초단위 사용
+움직임 이나 크기 : 유니티유닛, 배율 단위
+
+오브젝트는 따로 입력 을 주지않으면 계속 존재
+이펙트는 생성후 일정시간(StartLifeTime) 후 삭제
+
+
+다운받은 Asset 인 WarFx 의 Demo 폴더의 WarFx Demo New 열기
++ > Effect > Particle System > FX_Fire 로 설정
+
+위치값  0, 0, 0
+     -90, 0, 0
+	 
+Start Life Time :
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+마테리얼 생성
+
+wfx_t_smokeloop 검색 후 Maps > 알베도 옆에 넣기
+
+FX_Fire 가장 하단 Renderer 에 Material 에 넣기

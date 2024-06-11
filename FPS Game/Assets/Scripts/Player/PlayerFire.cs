@@ -40,9 +40,23 @@ public class PlayerFire : MonoBehaviour
     // 무기 모드 텍스트
     public Text wModeText;
 
+    // 무기 아이콘 스프라이트 변수
+    public GameObject weapon01;
+    public GameObject weapon02;
+
+    // 크로스헤어 스프라이트 변수
+    public GameObject crossHair01;
+    public GameObject crossHair02;
+
+    // 마우스 오른쪽 버튼 클릭 아이콘 스프라이트 변수
+    public GameObject weapon01_R;
+    public GameObject weapon02_R;
 
     // 총발사 효과 모음
     public GameObject[] effects;
+
+    // 마우스 오른쪽 버튼 클릭 줌 모드 스프라이트 변수
+    public GameObject crosshair02_zoom;
 
     private void Start()
     {
@@ -85,11 +99,19 @@ public class PlayerFire : MonoBehaviour
                     {
                         Camera.main.fieldOfView = 15f;
                         zoomMode = true;
+
+                        // 줌 모드 일때 크로스헤어를 변경
+                        crosshair02_zoom.SetActive(true);
+                        crossHair02.SetActive(false);
                     }
                     else
                     {
                         Camera.main.fieldOfView = 60f;
                         zoomMode = false;
+
+                        // 크로스헤어를 스나이퍼 모드로 돌려놓기 
+                        crosshair02_zoom.SetActive(false);
+                        crossHair02.SetActive(true);
                     }
                     break;
                 default:
@@ -142,6 +164,10 @@ public class PlayerFire : MonoBehaviour
         // 만일 키보드의 숫자 1번 입력을 받으면, 무기 모드를 일반 모트로 변경
         if (Input.GetKeyDown(KeyCode.Alpha1))
         {
+            // 스나이퍼 모드에서 일반 모드 키를 눌렀을때 Weapone01_R_zoom 은 비활성화
+            crosshair02_zoom.SetActive(false);
+            zoomMode = false;
+
             wMode = WeaponMode.Normal;
 
             // 일반 모드 텍스트 출력
@@ -149,15 +175,32 @@ public class PlayerFire : MonoBehaviour
 
             // 카메라의 화면을 다시 원래대로 돌려줌
             Camera.main.fieldOfView = 60;
-            zoomMode = false;
+
+            // 1번 스프라이트는 활성화, 2번 스프라이트는 비활성화
+            weapon01.SetActive(true);
+            weapon01_R.SetActive(true);
+            crossHair01.SetActive(true);
+
+            weapon02.SetActive(false);
+            weapon02_R.SetActive(false);
+            crossHair02.SetActive(false);
         }
-        // 만일 키보드의 숫자 2번입ㄹ혁을 받으면, 무기 모드를 스나이퍼 모드로 변경
+        // 만일 키보드의 숫자 2번입력을 받으면, 무기 모드를 스나이퍼 모드로 변경
         else if (Input.GetKeyDown(KeyCode.Alpha2))
         {
             wMode = WeaponMode.Sniper;
 
             // 스나이퍼 모드 텍스트 출력
             wModeText.text = "Sniper Mode";
+
+            // 2번 스프라이트는 활성화, 1번 스프라이트는 비활성화
+            weapon02.SetActive(true);
+            weapon02_R.SetActive(true);
+            crossHair02.SetActive(true);
+
+            weapon01.SetActive(false);
+            weapon01_R.SetActive(false);
+            crossHair01.SetActive(false);
         }
     }
 
