@@ -2990,3 +2990,191 @@ Light Prove 범위를 늘려 해결 가능
 
 패키지 다운로드
 Window > Package Manager > Post Processing
+
+3D Object > Post-Process Volume
+위치값 리셋
+
+레이어 추가 > Post > 적용
+
+포스트 프로세스 적용 범위는 콜라이더로 설정
+크기 50, 50, 50
+
+Blend Distance : 콜라이더 에 적용값만큼 가까워질수록 효과 적용
+
+프로파일 new 눌러 생성
+
+씬 폴더에 생성되었는지 확인
+
+메인 카메라 에 Post Process Layer 컴포넌트 추가
+> 감지할 레이어(컴포넌트 안에 레이어 칸) 에 Post
+
+
+Anti-aliasing : 확대시 픽셀이 계단처럼 보이는 현상을 완화
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+ 앰비언트 오쿨루젼
+Post-Process Volume 의 컴포넌트 에 Add effect(컴포넌트 아님)
+> Unity > Ambient Occlusion
+
+Mod , Intensity, Color 활성화
+Intensity 값 조절하여 그림자 세기 조절 가능
+
+ 블룸 (눈부심 효과)
+Unity > Bloom
+Intensity, Threshold, Soft Knee 활성화
+
+Thereshold 값 내리면 눈부심 현상 만들수 있음
+
+
+
+ 뎁스 오브 필드 (카메라에 멀어지면 초점 흐리게)
+Unity > Depth of Field
+Focus Distance, Aperture, Foacl Length 활성화
+
+Focus Distance : 카메라가 바라보는 방향으로 부터 특정 거리에 초점을 맞춤
+                 (초점을 맞추어 선명하게 보일지에 대한 수치)
+				 
+Aperture : 카메라 조리개와 빛을 받아들일 초점이 잡히는 범위를 조절
+           수치가 낮을 수록 효과가 쉽게 적용됨
+		   
+Focal Length : Focus Distance 를 기준으로 어느정도 범위까지 선명할것인지
+               정하는 수치, 수치가 높을수록 좁은 영역이 선명해짐
+			   
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+씨네머신
+Window > Package Manager > Cinemachine 추가
+
+Playable Director : 감독
+Cinemachine Brain : 카메라
+TimeLine : 시나리오,필름
+씬 : 로케이션
+게임오브젝트 : 배우, 소품
+
+빈 오브젝트 추가 > Director 로 이름설정 > Playable Director 컴포넌트 추가
+
+Window > Sequencing > Timeline 추가
+Director 선택한 채로 TimeLine 뷰에 Create 로 씬 추가
+
+TimeLine 뷰의 자물쇠 잠금으로 다른 오브젝트 눌러도 안넘어가게 설정\
+톱니모양 눌러 Frame 을 Seconds 로 하여 프레임 로 작업하는게 아닌 초별로 작업
+
+왼쪽 빈공간에 우클릭 Cinemachine Track 추가
+> 하이러라키뷰에 Camera 추가 한뒤 Track 에 연결(Cinemachine of Brain)
+
+Track 있는 열의 옆 칸에 우클릭 > Add Cinemachine Shot
+선택 후 컴포넌트에 Virtual Camera 에 Create 눌러 CM vcam 생성
+ 
+Director 오브젝트의 자식오브젝트로 넣기
+
+
+한번더 Cinemachine Shot 만들고 똑같이 적용
+
+CM vcam1 시네마신 썃 선택
+Transform : 처음 시작할때 카메라 위치(CM vcam1 오브젝트 선택한뒤 위치값 설정 가능)
+
+위치값 을 9.38, 1.75, 0
+            0, -90, 0
+
+CM vcam2 위치값 설정
+위치값 2, 1.75, 0
+      0, -90, 0
+	  
+
+서서히 카메라가 다가가게 설정
+만들었던 Cinemachine Shot 2개 를 겹치게 하여 두번째 샷으로 천천히 넘어가게 가능
+
+좀비 위치 보여주기
+Cinemachine Shot 새로 생성 > Virtual Camera 생성 
+> CM vcam3 를 Director 의 자식 오브젝트로 설정
+> CM vcam3 의 위치값 은 좀비를 비추는 위치로 설정
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+효과 넣기
+
+
+진동효과 넣기
+
+CM vcam1 오브젝트 선택
+컴포넌트 의 Noise > Basic Multi Channel Perlin
+> Noise Profile : 6D Shake 로 설정
+
+
+
+특정 오브젝트 중앙으로 바라보기
+
+CM vcam2 선택
+Look At 칸에 Player 오브젝트 넣기
+Aim 이 Donotthing 을 Composer 로 설정
+Tracked Object Offset : 해당 오브젝트에 설정 값만큼 위치 설정
+오프셋 값  0, 0.5, 0
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+페이드 인,아웃
+
+Canvas > UI > Image > FadeInOut 으로 설정
+스트래치 스트래치 전부0 으로, 색상 검정
+
+오브젝트를 TimeLine Track 만드는 곳에 끌어 넣어 Add Animation Track
+
+녹화 버튼 누른뒤 FadeInOut 의 알파값 을 약간 바꿨다가 다시 원래대로
+(수정사항이 없어 변경점이 없었기 때문에)
+씬 변경이 되어야 하는 곳마다 알파값 수정하여 변경정 생성
+
+FadeInOut 오브젝트를 트랙 칸에 넣고 Add Activate Track 으로 설정
+Activate 영역만큼만 활성화 되어 있음, 페이드 인아웃이 끝나는 곳까지 영역 설정
+
+Camera 오브젝트 Activate Track 으로 만들고 플레이 가능한 시점까지 영역설정
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+스크립트로 제어 해보기
+
+Director 오브젝트에 DirectorAction 스크립트 추가
+
+스크립트 수정
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.Playables;
+using Cinemachine;
+
+public class DirectorAction : MonoBehaviour
+{
+    PlayableDirector pd;        // 감독 오브젝트
+
+    public Camera targetCam;
+
+    private void Start()
+    {
+        // Director 오브젝트가 가지고있는 PlayableDirector 컴포넌트를 가지고 옴
+        pd = GetComponent<PlayableDirector>();
+
+        // 타임라인 실행
+        pd.Play();
+    }
+
+    private void Update()
+    {
+        // 현재 진행중인 시간이 전체 시간과 크거나 같으면 (재싱시간이 다되면)
+        if (pd.time >= pd.duration)
+        {
+            // 만약 메인카메라가 타겟카메라(씨네마신에 활용되는 카메라)라면
+            // 제어를 위해서 씨네머신 브레인을 비활성화
+            if (Camera.main == targetCam)
+            {
+                targetCam.GetComponent<CinemachineBrain>().enabled = false;
+            }
+            // 씨네머신에 사용한 카메라도 비활성화
+            targetCam.gameObject.SetActive(false);
+
+            // Diretor 자신을 비활성화
+            gameObject.SetActive(false);
+        }
+    }
+}
