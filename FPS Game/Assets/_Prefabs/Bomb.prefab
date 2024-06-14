@@ -128,7 +128,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 538f7a829bca1dd4d8f92c77a77359cf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  audio: {fileID: 0}
   bombEffect: {fileID: 2175713587364164588, guid: 715d2574d1d3a1c448c18ce96fbb1f5c, type: 3}
+  attackPower: 10
+  explosionRadius: 5
 --- !u!1001 &7582494803019692386
 PrefabInstance:
   m_ObjectHideFlags: 0

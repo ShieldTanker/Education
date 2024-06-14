@@ -8,7 +8,8 @@ using UnityEngine.SceneManagement;
 public class GameManager : MonoBehaviour
 {
     // 싱글톤 변수
-    public static GameManager gm;
+    static GameManager gm;
+    public static GameManager GM { get { return gm; } set { gm = value; } }
 
     private void Awake()
     {
@@ -45,6 +46,11 @@ public class GameManager : MonoBehaviour
     // 옵션 화면 UI 오브젝트 변수
     public GameObject gameOption;
 
+    public Text killCountTxt;
+
+    int killCount;
+    public int KillCount { get { return killCount; } set { killCount = value; } }
+
 
     private void Start()
     {
@@ -65,6 +71,8 @@ public class GameManager : MonoBehaviour
 
         // 플레이어 오브젝트를 찾은 후 플레이어의 PlayerMove 컴포넌트 받아오기
         player = GameObject.Find("Player").GetComponent<PlayerMove>();
+
+        SetKillCount();
     }
 
     private void Update()
@@ -74,7 +82,7 @@ public class GameManager : MonoBehaviour
         {
             // 플레이어의 애니메이션을 멈춤
             player.GetComponentInChildren<Animator>().SetFloat("moveMotion", 0f);
-            
+
             // 상태 텍스트를 활성화
             gameLabel.SetActive(true);
 
@@ -94,6 +102,12 @@ public class GameManager : MonoBehaviour
             gState = GameState.GameOver;
         }
     }
+
+    public void SetKillCount()
+    {
+        killCountTxt.text = "Kill Count : " + killCount;
+    }
+
     IEnumerator ReadyToStart()
     {
         // 2초간 대기

@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class BombAction : MonoBehaviour
 {
+
     // 폭발 이펙트 프리팹 변수
     public GameObject bombEffect;
 
@@ -27,7 +28,7 @@ public class BombAction : MonoBehaviour
         Collider[] cols = Physics.OverlapSphere(
             transform.position, explosionRadius, 1 << enemyLayer);
 
-        // 저장된 Collider 배열의 있는 모든 에너미에세 수류탄 데미지를 적용
+        // 저장된 Collider 배열의 있는 모든 에너미 에게 수류탄 데미지를 적용
         for (int i = 0; i < cols.Length; i++)
         {
             cols[i].GetComponent<EnemyFSM>().HitEnemy(attackPower);

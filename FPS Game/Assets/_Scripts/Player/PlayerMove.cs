@@ -11,6 +11,8 @@ public class PlayerMove : MonoBehaviour
     // 캐릭터 컨트롤러 변수
     CharacterController cc;
 
+    Coroutine lowHP;
+
     // 중력 변수
     float gravity = -20f;
 
@@ -50,7 +52,7 @@ public class PlayerMove : MonoBehaviour
     private void Update()
     {
         // 게임 상태가 '게임중' 상태 일 때만 조작할 수 있게 함
-        if (GameManager.gm.gState != GameManager.GameState.Run)
+        if (GameManager.GM.gState != GameManager.GameState.Run)
             return;
 
         // 사용자의 입력을 받음
@@ -107,8 +109,35 @@ public class PlayerMove : MonoBehaviour
         // 현재 플레이어 hp(%)를 hp 슬라이더의 value에 반영
         hpSlider.value = (float)hp / maxHP;
 
-        // 피격 이펙트 코루틴을 시작
-        StartCoroutine(PlayerHitEffect());
+        if (hp > 0)
+        {
+            // 피격 이펙트 코루틴을 시작
+            StartCoroutine(PlayerHitEffect());
+
+            if (hpSlider.value <= 0.15f)
+                lowHP = StartCoroutine(LowHP());
+        }
+        else
+        {
+            Debug.Log("LowHP");
+            StopCoroutine(lowHP);
+        }
+    }
+
+    IEnumerator LowHP()
+    {
+        while (hpSlider.value < 0.15f)
+        {
+            // 피격 UI 를 활성화
+            hitEffect.SetActive(true);
+
+            yield return new WaitForSeconds(1);
+
+            // 피격 UI 비활성화
+            hitEffect.SetActive(false);
+
+            yield return new WaitForSeconds(1);
+        }
     }
 
     IEnumerator PlayerHitEffect()

@@ -65,6 +65,8 @@ public class EnemyFSM : MonoBehaviour
     // 내비게이션 에이전트 변수
     NavMeshAgent smith;
 
+    bool damagedCoroutine;
+
     private void Start()
     {
         // 최초의 에너미 상태를 대기 상태로
@@ -253,12 +255,15 @@ public class EnemyFSM : MonoBehaviour
     // 데미지 처리용 코루틴 함수
     IEnumerator DamagedProcess()
     {
+        damagedCoroutine = true;
+
         // 피격 모션 시간만큼 기다림
         yield return new WaitForSeconds(1f);
 
         // 현재 상태를 이동 상태로 전환
         m_State = EnemyState.Move;
         print("상태 전환 : Damaged -> Move");
+        damagedCoroutine = false;
     }
 
     // 데미지 실행 함수
@@ -306,11 +311,17 @@ public class EnemyFSM : MonoBehaviour
 
     void Die()
     {
-        // 진행중인 피격 코루틴 중지
-        StopCoroutine(hitCoroutine);
+        if (damagedCoroutine)
+        {
+            // 진행중인 피격 코루틴 중지
+            StopCoroutine(hitCoroutine);
+        }
 
         // 죽음 상태를 처리하기 위한 코루틴을 실행
         StartCoroutine(DieProcess());
+
+        GameManager.GM.KillCount++;
+        GameManager.GM.SetKillCount();
     }
 
     IEnumerator DieProcess()

@@ -5,6 +5,9 @@ using UnityEngine.UI;
 
 public class PlayerFire : MonoBehaviour
 {
+    public AudioClip gunSound;
+    public AudioSource audio;
+
     // 발사 위치
     public GameObject firePosition;
 
@@ -73,7 +76,7 @@ public class PlayerFire : MonoBehaviour
     private void Update()
     {
         // 게임 상태가 '게임중' 상태 일 때만 조작할 수 있게 함
-        if (GameManager.gm.gState != GameManager.GameState.Run)
+        if (GameManager.GM.gState != GameManager.GameState.Run)
             return;
 
         // 마우스 오른쪽 버튼을 입력 받음
@@ -92,7 +95,7 @@ public class PlayerFire : MonoBehaviour
                     // 카메라의 정면 방향으로 수류탄에 물리적인 힘을 가함 (Impulse : 순간적인 힘)
                     rb.AddForce(Camera.main.transform.forward * throwPower, ForceMode.Impulse);
                     break;
-                
+
                 case WeaponMode.Sniper:
                     // 만일, 줌 모드 상태가 아니라면 카메라를 확대 하고 줌 모드 상태로 변경
                     if (!zoomMode)
@@ -122,6 +125,9 @@ public class PlayerFire : MonoBehaviour
         // 마우스 왼쪽 버튼을 입력
         if (Input.GetMouseButtonDown(0))
         {
+            audio.clip = gunSound;
+            audio.Play();
+
             // 만일 이동 블랜드 트리 파라미터의 값이 0 이라면, 공격 애니메이션 실시
             if (anim.GetFloat("moveMotion") == 0)
             {
@@ -135,13 +141,18 @@ public class PlayerFire : MonoBehaviour
 
             // 레이가 부딯인 대상의 정보를 저장할 변수를 생성
             RaycastHit hitInfo;
-            if (Physics.Raycast(ray,out hitInfo))
+            if (Physics.Raycast(ray, out hitInfo))
             {
                 // 만일 레이에 부딪힌 대산의 레이어가 "Enemy" 라면 데미지 함수를 실행
                 if (hitInfo.transform.gameObject.layer == LayerMask.NameToLayer("Enemy"))
                 {
                     EnemyFSM eFsm = hitInfo.transform.GetComponent<EnemyFSM>();
                     eFsm.HitEnemy(weaponPower);
+                }
+                else if (hitInfo.transform.gameObject.layer == LayerMask.NameToLayer("EnemyHead"))
+                {
+                    HeadShot eHead = hitInfo.transform.GetComponent<HeadShot>();
+                    eHead.EnemyHeadShot();
                 }
                 // 그렇지 않다면 레이에 부딪힌 지점에 피격 이펙트 플레이
                 else
