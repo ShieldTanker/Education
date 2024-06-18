@@ -315,6 +315,7 @@ public class EnemyFSM : MonoBehaviour
         {
             // 진행중인 피격 코루틴 중지
             StopCoroutine(hitCoroutine);
+            // StopAllCoroutines();
         }
 
         // 죽음 상태를 처리하기 위한 코루틴을 실행
@@ -322,6 +323,8 @@ public class EnemyFSM : MonoBehaviour
 
         GameManager.GM.KillCount++;
         GameManager.GM.SetKillCount();
+        
+        //GameManager.GM.EnemyKill();
     }
 
     IEnumerator DieProcess()

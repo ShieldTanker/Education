@@ -39,6 +39,7 @@ public class PlayerMove : MonoBehaviour
 
     // 애니메이터 변수
     Animator anim;
+    public Animator hpAnim;
 
     private void Start()
     {
@@ -115,7 +116,14 @@ public class PlayerMove : MonoBehaviour
             StartCoroutine(PlayerHitEffect());
 
             if (hpSlider.value <= 0.15f)
-                lowHP = StartCoroutine(LowHP());
+            {
+                // lowHP = StartCoroutine(LowHP());
+                hpAnim.SetBool("LowHP", true);
+            }
+            else
+            {
+                hpAnim.SetBool("LowHP", false);
+            }
         }
         else
         {

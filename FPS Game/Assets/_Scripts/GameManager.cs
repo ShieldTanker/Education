@@ -48,6 +48,8 @@ public class GameManager : MonoBehaviour
 
     public Text killCountTxt;
 
+    int enemyKillCnt;
+
     int killCount;
     public int KillCount { get { return killCount; } set { killCount = value; } }
 
@@ -107,6 +109,16 @@ public class GameManager : MonoBehaviour
     {
         killCountTxt.text = "Kill Count : " + killCount;
     }
+
+
+/*
+    public void EnemyKill()
+    {
+        enemyKillCnt++;
+        killCountTxt.text = "Kill Count : " + enemyKillCnt;
+    }
+*/
+
 
     IEnumerator ReadyToStart()
     {
