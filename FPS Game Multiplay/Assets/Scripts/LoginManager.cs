@@ -67,7 +67,7 @@ public class LoginManager : MonoBehaviour
             GameMode = mode,
             SessionName = roomName,
             // 플레이어 수 제한
-            PlayerCount = 2,
+            PlayerCount = 4,
         };
 
         // 스타트 게임 매소드 실행결과를 기다림

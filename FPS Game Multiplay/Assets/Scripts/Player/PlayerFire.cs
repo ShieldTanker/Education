@@ -2,8 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using Fusion;
 
-public class PlayerFire : MonoBehaviour
+public class PlayerFire : NetworkBehaviour
 {
     // 발사 위치
     public GameObject firePosition;
@@ -57,9 +58,19 @@ public class PlayerFire : MonoBehaviour
 
     // 마우스 오른쪽 버튼 클릭 줌 모드 스프라이트 변수
     public GameObject crosshair02_zoom;
-    
-    private void Start()
+
+    public override void Spawned()
     {
+        wModeText = GameManager.gm.wModeText;
+        bulletEffect = GameManager.gm.bulletEffect;
+        weapon01 = GameManager.gm.weapon01;
+        weapon02 = GameManager.gm.weapon02;
+        crosshair01 = GameManager.gm.crosshair01;
+        crosshair02 = GameManager.gm.crosshair02;
+        weapon01_R = GameManager.gm.weapon01_R;
+        weapon02_R = GameManager.gm.weapon02_R;
+        crosshair02_zoom = GameManager.gm.crosshair02_zoom;
+
         // 피격 이펙트 오브젝트에서 파티클 시스템 컴포넌트 가져오기
         ps = bulletEffect.GetComponent<ParticleSystem>();
 
@@ -68,9 +79,11 @@ public class PlayerFire : MonoBehaviour
 
         // 무기 초기 모드를 노멀 모드로 설정
         wMode = WeaponMode.Normal;
+
     }
 
-    private void Update()
+    // 수신하고 처리하는 프레임에 작동
+    public override void FixedUpdateNetwork()
     {
         // 게임 상태가 '게임 중' 상태일 때만 조작할 수 있게 함
         if (GameManager.gm.gState != GameManager.GameState.Run)

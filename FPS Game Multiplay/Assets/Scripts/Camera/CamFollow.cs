@@ -9,7 +9,10 @@ public class CamFollow : MonoBehaviour
 
     private void Update()
     {
-        // 카메라의 위치를 목표 트랜스폼의 위치에 일치시킴
-        transform.position = target.position;
+        if (target != null)
+        {
+            // 카메라의 위치를 목표 트랜스폼의 위치에 일치시킴
+            transform.position = target.position;
+        }
     }
 }

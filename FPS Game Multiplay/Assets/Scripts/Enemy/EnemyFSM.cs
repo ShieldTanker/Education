@@ -23,8 +23,9 @@ public class EnemyFSM : MonoBehaviour
     // 플레이어 발견 범위
     public float findDistance = 8f;
 
-    // 플레이어 트랜스폼
-    Transform player;
+    // 가장 가까운 플레이어
+    GameObject nearPlayer = null;
+
 
     // 공격 가능 범위
     public float attackDistance = 2f;
@@ -71,9 +72,6 @@ public class EnemyFSM : MonoBehaviour
         // 최초의 에너미 상태를 대기
         m_State = EnemyState.Idle;
 
-        // 플레이어의 트랜스폼 컴포넌트 받아오기
-        player = GameObject.Find("Player").transform;
-
         // 캐릭터 컴트롤러 컴포넌트 받아오기
         cc = GetComponent<CharacterController>();
 
@@ -119,14 +117,17 @@ public class EnemyFSM : MonoBehaviour
 
     void Idle()
     {
-        // 만일, 플레이어와 거리가 액션 범위 이내라면 Move 상태로 전환
-        if (Vector3.Distance(transform.position, player.position) < findDistance)
+        // 만일, 아무 플레이어와 거리가 액션 범위 이내라면 Move 상태로 전환
+        foreach (var player in GameManager.gm.players)
         {
-            m_State = EnemyState.Move;
-            print("상태 전환: Idle -> Move");
+            if (Vector3.Distance(transform.position, player.transform.position) < findDistance)
+            {
+                m_State = EnemyState.Move;
+                print("상태 전환: Idle -> Move");
 
-            // 이동 애니메이션으로 전환
-            anim.SetTrigger("IdleToMove");
+                // 이동 애니메이션으로 전환
+                anim.SetTrigger("IdleToMove");
+            }
         }
     }
 
@@ -138,15 +139,30 @@ public class EnemyFSM : MonoBehaviour
             // 현재 상태를 복귀(Return)로 전환
             m_State = EnemyState.Return;
             print("상태 전환 : Move -> Return");
+
+            return;
         }
+
+        // 플레이어 리스트중 가장 가까운 플레이어 검색
+        float minDistance = float.MaxValue;
+        foreach (var player in GameManager.gm.players)
+        {
+            float distance = Vector3.Distance(transform.position, player.transform.position);
+            if (minDistance > distance)
+            {
+                minDistance = distance;
+                nearPlayer = player;
+            }
+        }
+
         // 만일, 플레이어와의 거리가 공격 범위 밖이라면 플레이어를 향해 이동
-        else if (Vector3.Distance(transform.position, player.position) > attackDistance)
+        if (minDistance > attackDistance)
         {
             // 내비게이션으로 접근하는 최소 거리를 공격 가능 거리로 설정
             smith.stoppingDistance = attackDistance;
 
             // 내비게이션의 목적지를 플레이어의 위치로 설정
-            smith.destination = player.position;
+            smith.destination = nearPlayer.transform.position;
         }
         // 그렇지 않다면, 현재 상태를 공격(Attack)으로 전환
         else
@@ -169,7 +185,7 @@ public class EnemyFSM : MonoBehaviour
     void Attack()
     {
         // 만일, 플레이어가 공격 범위 이내에 있다면 플레이어를 공격
-        if (Vector3.Distance(transform.position, player.position) < attackDistance)
+        if (Vector3.Distance(transform.position, nearPlayer.transform.position) < attackDistance)
         {
             // 일정한 시간마다 플레이어를 공격
             currentTime += Time.deltaTime;
@@ -198,7 +214,7 @@ public class EnemyFSM : MonoBehaviour
     // 플레이어의 스크립트의 데미지 처리 함수를 실행
     public void AttackAction()
     {
-        player.GetComponent<PlayerMove>().DamageAction(attackPower);
+        nearPlayer.GetComponent<PlayerMove>().DamageAction(attackPower);
     }
 
     void Return()

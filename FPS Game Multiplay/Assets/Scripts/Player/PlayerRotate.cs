@@ -1,8 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Fusion;
 
-public class PlayerRotate : MonoBehaviour
+public class PlayerRotate : NetworkBehaviour
 {
     // 회전 속도 변수
     public float rotSpeed = 200f;
@@ -10,7 +11,8 @@ public class PlayerRotate : MonoBehaviour
     // 회전 값 변수
     float mx = 0;
 
-    private void Update()
+    // 수신하고 처리하는 프레임에 작동
+    public override void FixedUpdateNetwork()
     {
         // 게임 상태가 '게임 중' 상태일 때만 조작할 수 있게 함
         if (GameManager.gm.gState != GameManager.GameState.Run)

@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using Fusion;
 
-public class GameManager : MonoBehaviour
+public class GameManager : NetworkBehaviour
 {
     // 싱글톤 변수
     public static GameManager gm;
@@ -27,7 +28,8 @@ public class GameManager : MonoBehaviour
     }
 
     // 현재의 게임 상태 변수
-    public GameState gState;
+    // [Networked] : 같은 세션에서 고유할수 있게 만듬(단 사용하려면 속성으로 사용해야함)
+    [Networked] public GameState gState { get; set; }
 
     // 게임 상태 UI 오브젝트 변수
     public GameObject gameLabel;
@@ -36,12 +38,29 @@ public class GameManager : MonoBehaviour
     Text gameText;
 
     // PlayerMove 클래스 변수
-    PlayerMove player;
+    public PlayerMove player;
 
     // 옵션 화면 UI 오브젝트 변수
     public GameObject gameOption;
 
-    private void Start()
+    public Slider hpSlider;
+    public GameObject hitEffect;
+
+    public GameObject bulletEffect;
+    public Text wModeText;
+
+    public GameObject weapon01;
+    public GameObject weapon02;
+    public GameObject crosshair01;
+    public GameObject crosshair02;
+    public GameObject weapon01_R;
+    public GameObject weapon02_R;
+    public GameObject crosshair02_zoom;
+
+    public List<GameObject> players;
+
+    // Start() 를 Spawned() 로 바꿈
+    public override void Spawned()
     {
         // 초기 게임 상태를 준비 상태로 설정
         gState = GameState.Ready;
@@ -57,15 +76,13 @@ public class GameManager : MonoBehaviour
 
         // 게임 준비 -> 게임 중 상태로 전환
         StartCoroutine(ReadyToStart());
-
-        // 플레이어 오브젝트를 찾은 후 플레이어의 PlayerMove 컴포넌트 받아오기
-        player = GameObject.Find("Player").GetComponent<PlayerMove>();
     }
 
-    private void Update()
+    // 수신하고 처리 하는 프레임에 처리 됨
+    public override void FixedUpdateNetwork()
     {
-        // 만일, 플레이어의 hp가 0이하라면
-        if (player.hp <= 0)
+        // 만일, 플레이어가 null 이 아니고 hp가 0이하라면
+        if (player != null && player.hp <= 0)
         {
             // 플레이어의 애니메이션을 멈춤
             player.GetComponentInChildren<Animator>().SetFloat("MoveMotion", 0f);
@@ -147,5 +164,15 @@ public class GameManager : MonoBehaviour
     {
         // 애플리케이션을 종료
         Application.Quit();
+    }
+
+    public void AddPlayer(GameObject obj)
+    {
+        players.Add(obj);
+    }
+
+    public void RemovePlayer(GameObject obj)
+    {
+        players.Remove(obj);
     }
 }
