@@ -59,10 +59,21 @@ public class PlayerFire : NetworkBehaviour
     // 마우스 오른쪽 버튼 클릭 줌 모드 스프라이트 변수
     public GameObject crosshair02_zoom;
 
+    [Networked] private NetworkButtons _buttonsPrevious { get; set; }
+
+    // 총을 쐈는지 확인하는 변수
+    // fireToggle 값이 바뀔때 OnFireBullet 메소드(nameof(OnFireBullet) 호출(정적메소그 여야함(static)
+    [Networked(OnChanged = nameof(OnFireBullet))]
+    public NetworkBool fireToggle { get; set; } // bool 말고 NetworkBool 써야함
+
+
+    [Networked] public Vector3 bulletEffectPosition { get; set; }
+    [Networked] public Vector3 bulletEffectNormal { get; set; }
+
+
     public override void Spawned()
     {
         wModeText = GameManager.gm.wModeText;
-        bulletEffect = GameManager.gm.bulletEffect;
         weapon01 = GameManager.gm.weapon01;
         weapon02 = GameManager.gm.weapon02;
         crosshair01 = GameManager.gm.crosshair01;
@@ -89,88 +100,94 @@ public class PlayerFire : NetworkBehaviour
         if (GameManager.gm.gState != GameManager.GameState.Run)
             return;
 
-        // 마우스 오른쪽 버튼을 입력 받음
-        if (Input.GetMouseButtonDown(1))
+        if (GetInput(out NetworkInputData data))
         {
-            switch (wMode)
+            // 마우스 오른쪽 버튼을 입력 받음
+            if (data.Buttons.WasPressed(_buttonsPrevious, PlayerButtons.Fire1))
             {
-                case WeaponMode.Normal:
-                    // 수류탄 오브젝트를 생성한 후 수류탄의 생성 위치를 발사 위치로 변경
-                    GameObject bomb = Instantiate(bombFactory);
-                    bomb.transform.position = firePosition.transform.position;
+                switch (wMode)
+                {
+                    case WeaponMode.Normal:
+                        // 수류탄 오브젝트를 생성한 후 수류탄의 생성 위치를 발사 위치로 변경
+                        var bomb = Runner.Spawn(
+                            bombFactory,
+                            firePosition.transform.position, 
+                            Quaternion.identity);
 
-                    // 수류탄 오브젝트의 rigidbody 컴포넌트를 가져옴
-                    Rigidbody rb = bomb.GetComponent<Rigidbody>();
+                        // 수류탄 오브젝트의 rigidbody 컴포넌트를 가져옴
+                        Rigidbody rb = bomb.GetComponent<Rigidbody>();
 
-                    // 카메라의 정면 방향으로 수류탄에 물리적인 힘을 가함
-                    rb.AddForce(Camera.main.transform.forward * throwPower, ForceMode.Impulse);
-                    break;
-                case WeaponMode.Sniper:
-                    // 만일, 줌 모드 상태가 아니라면 카메라를 확대하고 줌 모드 상태로 변경
-                    if (!zoomMode)
+                        // 카메라의 정면 방향으로 수류탄에 물리적인 힘을 가함
+                        rb.AddForce(Camera.main.transform.forward * throwPower, ForceMode.Impulse);
+                        break;
+                    case WeaponMode.Sniper:
+                        // 만일, 줌 모드 상태가 아니라면 카메라를 확대하고 줌 모드 상태로 변경
+                        if (!zoomMode)
+                        {
+                            Camera.main.fieldOfView = 15f;
+                            zoomMode = true;
+
+                            // 줌 코드일 때 크로스헤어를 변경
+                            crosshair02_zoom.SetActive(true);
+                            crosshair02.SetActive(false);
+                        }
+                        // 그렇지 않으면 카메라를 원래 상태로 되돌리고 줌 모드 상태를 해제
+                        else
+                        {
+                            Camera.main.fieldOfView = 60f;
+                            zoomMode = false;
+
+                            // 크로스헤어를 스나이퍼 모드로 돌려놓음
+                            crosshair02_zoom.SetActive(false);
+                            crosshair02.SetActive(true);
+                        }
+                        break;
+                }
+            }
+
+            // 마우스 왼쪽 버튼을 입력
+            if (data.Buttons.WasPressed(_buttonsPrevious, PlayerButtons.Fire0))
+            {
+                // 만일 이동 블랜드 트리 파라미터의 값이 0이라면, 공격 애니메이션 실시
+                if (anim.GetFloat("MoveMotion") == 0)
+                {
+                    anim.SetTrigger("Attack");
+                }
+
+                // 레이를 생성한 후 발사될 위치와 진행 방향을 설정
+                Ray ray = new Ray(
+                    Camera.main.transform.position,
+                    Camera.main.transform.forward);
+
+                // 레이가 부딪힌 대상의 정보를 저장할 변수를 생성
+                RaycastHit hitInfo;
+                if (Physics.Raycast(ray, out hitInfo))
+                {
+                    // 만일 레이에 부딪힌 대상의 레이어가 'Enemy'라면 데미지 함수를 실행
+                    if (hitInfo.transform.gameObject.layer == LayerMask.NameToLayer("Enemy"))
                     {
-                        Camera.main.fieldOfView = 15f;
-                        zoomMode = true;
-
-                        // 줌 코드일 때 크로스헤어를 변경
-                        crosshair02_zoom.SetActive(true);
-                        crosshair02.SetActive(false);
+                        EnemyFSM eFSM = hitInfo.transform.GetComponent<EnemyFSM>();
+                        eFSM.HitEnemy(weaponPower);
                     }
-                    // 그렇지 않으면 카메라를 원래 상태로 되돌리고 줌 모드 상태를 해제
+                    // 그렇지 않다면, 레이에 부딪히 지점에 피격 이펙트를 플레이
                     else
                     {
-                        Camera.main.fieldOfView = 60f;
-                        zoomMode = false;
+                        bulletEffectPosition = hitInfo.point;
+                        bulletEffectNormal = hitInfo.normal;
 
-                        // 크로스헤어를 스나이퍼 모드로 돌려놓음
-                        crosshair02_zoom.SetActive(false);
-                        crosshair02.SetActive(true);
+                        // 쏠때마다 값이 반대가 됨으로 메소드 호출
+                        fireToggle = !fireToggle;
                     }
-                    break;
-            }
-        }
-
-        // 마우스 왼쪽 버튼을 입력
-        if (Input.GetMouseButtonDown(0))
-        {
-            // 만일 이동 블랜드 트리 파라미터의 값이 0이라면, 공격 애니메이션 실시
-            if (anim.GetFloat("MoveMotion") == 0)
-            {
-                anim.SetTrigger("Attack");
-            }
-
-            // 레이를 생성한 후 발사될 위치와 진행 방향을 설정
-            Ray ray = new Ray(
-                Camera.main.transform.position,
-                Camera.main.transform.forward);
-
-            // 레이가 부딪힌 대상의 정보를 저장할 변수를 생성
-            RaycastHit hitInfo;
-            if (Physics.Raycast(ray, out hitInfo))
-            {
-                // 만일 레이에 부딪힌 대상의 레이어가 'Enemy'라면 데미지 함수를 실행
-                if (hitInfo.transform.gameObject.layer == LayerMask.NameToLayer("Enemy"))
-                {
-                    EnemyFSM eFSM = hitInfo.transform.GetComponent<EnemyFSM>();
-                    eFSM.HitEnemy(weaponPower);
                 }
-                // 그렇지 않다면, 레이에 부딪히 지점에 피격 이펙트를 플레이
-                else
-                {
-                    // 피격 이펙트의 위치를 레이가 부딪힌 지점으로 이동
-                    bulletEffect.transform.position = hitInfo.point;
-
-                    // 피격 이펙트의 forward 방향을 레이가 부딪힌 지점의 법선 벡터와 일치 시킴
-                    bulletEffect.transform.forward = hitInfo.normal;
-
-                    // 피격 이펙트를 플레이
-                    ps.Play();
-                }
+                // 총 이펙트를 실시
+                StartCoroutine(ShootEffectOn(0.05f));
             }
-            // 총 이펙트를 실시
-            StartCoroutine(ShootEffectOn(0.05f));
+            _buttonsPrevious = data.Buttons;
         }
+    }
 
+    private void Update()
+    {// 무기 모드는 공유 할 필요가 없기에 Update() 로 따로 빼놓음
         // 만일 키보드의 숫자 1번 입력을 받으면, 무기 모드를 일반 모드로 변경
         if (Input.GetKeyDown(KeyCode.Alpha1))
         {
@@ -223,5 +240,18 @@ public class PlayerFire : NetworkBehaviour
         yield return new WaitForSeconds(duration);
         // 이펙트 오브젝트를 다시 비활성화
         eff_Flash[num].SetActive(false);
+    }
+
+    void DisplayBulletEffect()
+    {
+        bulletEffect.transform.position = bulletEffectPosition;
+        bulletEffect.transform.forward = bulletEffectNormal;
+        ps.Play();
+    }
+
+    private static void OnFireBullet(Changed<PlayerFire> playerFire)
+    {// Changed<해당하는 타입>
+        // 사용 할때 Behaviour 사용
+        playerFire.Behaviour.DisplayBulletEffect();
     }
 }

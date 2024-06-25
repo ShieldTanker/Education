@@ -1,8 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Fusion;
 
-public class BombAction : MonoBehaviour
+public class BombAction : NetworkBehaviour
 {
     // 폭발 이펙트 프리팹 변수
     public GameObject bombEffect;
@@ -29,12 +30,10 @@ public class BombAction : MonoBehaviour
         }
 
         // 이펙트 프리팹을 생성
-        GameObject eff = Instantiate(bombEffect);
-
-        // 이펙트 프리팹의 위치는 수류탄 오브젝트 자신의 위치가 동일
-        eff.transform.position = transform.position;
+        Runner.Spawn(bombEffect, transform.position, Quaternion.identity);
 
         // 자기 자신을 제거
-        Destroy(gameObject);
+        // Object : 퓨전에서 처리되고있는 오브젝트 타입
+        Runner.Despawn(Object);
     }
 }

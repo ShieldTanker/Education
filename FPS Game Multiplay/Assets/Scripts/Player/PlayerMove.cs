@@ -64,6 +64,9 @@ public class PlayerMove : NetworkBehaviour
             // 메인 카메라의 CamFollow 컴포넌트를 가져옴
             CamFollow cf = Camera.main.GetComponent<CamFollow>();
             cf.target = camPosition;
+
+            // PlayerMove 를 가지는 오브젝트의 PlayerRotate 컴포넌트 를 넘겨줌
+            GameManager.gm.pr = GetComponent<PlayerRotate>();
         }
 
         hitEffect = GameManager.gm.hitEffect;
@@ -81,9 +84,11 @@ public class PlayerMove : NetworkBehaviour
             // FixedUpdateNetwork() 는 FixedDeltaTime 이 아닌 Runner.DeltaTime 을 사용
             netCC.Move(data.dir * moveSpeed * Runner.DeltaTime);
 
+            Debug.Log(data.dir);
+
             if (data.Buttons.WasPressed(_buttonsPrevious, PlayerButtons.Jump))
-            {// data 현재 버튼이 Jump 번째 이전버튼 과 다르면
-                netCC.Jump(); // 공중에 있으면 점프안되는것고 구현 되어있음
+            {// data 현재 버튼이 Jump 번째 이전 버튼 과 다르면
+                netCC.Jump(); // 공중에 있으면 점프 안되는 것 도 구현 되어있음
             }
 
             _buttonsPrevious = data.Buttons;

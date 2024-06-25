@@ -18,27 +18,28 @@ public class Target : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetMouseButton(0))
-        {
-            // 메인 카메라에서 클릭한 위치쪽으로 Ray를 쏨
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            // Ray 에 맞은 오브젝트를 저장할 변수 선언
-            RaycastHit hitInfo;
+        UpdateTargets(transform.position);
+        /*        if (Input.GetMouseButton(0))
+                {
+                    // 메인 카메라에서 클릭한 위치쪽으로 Ray를 쏨
+                    Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                    // Ray 에 맞은 오브젝트를 저장할 변수 선언
+                    RaycastHit hitInfo;
 
-            // Ray 에 맞은 벡터 값들을 hitInfo 에 저장
-            // Physics.Raycast(ray, out hitInfo) 로 써도 됨
-            if (Physics.Raycast(ray.origin, ray.direction, out hitInfo))
-            {
-                // targetPosition = ray 에 맞은 오브젝트의 벡터값
-                Vector3 targetPosition = hitInfo.point;
+                    // Ray 에 맞은 벡터 값들을 hitInfo 에 저장
+                    // Physics.Raycast(ray, out hitInfo) 로 써도 됨
+                    if (Physics.Raycast(ray.origin, ray.direction, out hitInfo))
+                    {
+                        // targetPosition = ray 에 맞은 오브젝트의 벡터값
+                        Vector3 targetPosition = hitInfo.point;
 
-                // 목적지에 targetPosition 설정
-                UpdateTargets(targetPosition);
+                        // 목적지에 targetPosition 설정
+                        UpdateTargets(targetPosition);
 
-                // 오브젝트의 위치를 targetPosition 위치로 설정
-                transform.position = targetPosition;
-            }
-        }
+                        // 오브젝트의 위치를 targetPosition 위치로 설정
+                        transform.position = targetPosition;
+                    }
+                }*/
     }
 
     void UpdateTargets(Vector3 targetPosition)

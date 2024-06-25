@@ -972,3 +972,102 @@ FixedUpdateNetwork() 수정
 */
     }
 	
+	
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+플레이어 회전시 다른플레이어 에게 보이게
+
+NetworkInputData 스크립트 변수 추가
+
+	// 마우스 회전값 변수
+	public float mx;
+
+
+PlayerRotate 스크팁트 수정
+
+    private void Update()
+    {
+        // 마우스 좌우 입력을 받음
+        float mouse_X = Input.GetAxis("Mouse X");
+
+        // 회전 값 변수에 마우스 입력 값만큼 미리 누적시킴
+        mx += mouse_X * rotSpeed * Time.deltaTime;
+    }
+
+    // 수신하고 처리하는 프레임에 작동
+    public override void FixedUpdateNetwork()
+    {
+        // 게임 상태가 '게임 중' 상태일 때만 조작할 수 있게 함
+        if (GameManager.gm.gState != GameManager.GameState.Run)
+            return;
+
+        if (GetInput(out NetworkInputData data))
+        {
+            // 회전 방향으로 물체를 회전시킴
+            transform.eulerAngles = new Vector3(0, data.mx, 0);
+        }
+    }
+	
+GameManager 변수 추가
+	public List<GameObject> players;
+	
+
+PlayerMove 스크립트 수정
+
+    public override void Spawned()
+    {
+        // 캐릭터 컨트롤러 컴포넌트 받아오기
+        netCC = GetComponent<NetworkCharacterControllerPrototype>();  // cc 삭제하고 Net CC Proto 로 바꿈
+
+        // 애니메이터 받아오기
+        anim = GetComponentInChildren<Animator>();
+
+        if (Object.HasInputAuthority)
+        {// 네트워크 오브젝트가 제어권한이 있는지
+            GameManager.gm.player = this;
+            hpSlider = GameManager.gm.hpSlider;
+
+            // 메인 카메라의 CamFollow 컴포넌트를 가져옴
+            CamFollow cf = Camera.main.GetComponent<CamFollow>();
+            cf.target = camPosition;
+
+            // PlayerMove 를 가지는 오브젝트의 PlayerRotate 컴포넌트 를 넘겨줌
+            GameManager.gm.pr = GetComponent<PlayerRotate>();
+        }
+
+        hitEffect = GameManager.gm.hitEffect;
+    }
+
+
+LocalInputPoller 스크립트 수정
+
+    // 입력이 있을때 자동으로 호출
+    public void OnInput(NetworkRunner runner, NetworkInput input)
+    {
+        if (GameManager.gm == null || GameManager.gm.pr == null)
+            return;
+
+        // NetworkInputData : 우리가 만든 구조체
+        NetworkInputData localInput = new NetworkInputData();
+
+        float h = Input.GetAxisRaw("Horizontal");
+        float v = Input.GetAxisRaw("Vertical");
+
+        Vector3 dir = new Vector3(h, 0, v);
+        dir = dir.normalized;  // 대각선 입력을 정규화
+        dir = Camera.main.transform.TransformDirection(dir);  // 메인카메라가 바라보는 방향을 기준으로 새로 계산
+
+        localInput.dir = dir; // 구조체에 dir 값 넣기
+
+        // 버튼 세팅(열거형 Jump = 0, Input.GetButton("Jump") = bool)
+        localInput.Buttons.Set(PlayerButtons.Jump, Input.GetButton("Jump"));
+        // GetMouseButton()은 Update() 에서 사용하는거라 여기에 쓰면 안됨
+        localInput.Buttons.Set(PlayerButtons.Fire0, Input.GetMouseButton(0));
+        localInput.Buttons.Set(PlayerButtons.Fire1, Input.GetMouseButton(1));
+
+        localInput.mx = GameManager.gm.pr.mx;
+
+        // 매개변수가 참조형이라서 값이 변함
+        input.Set(localInput);
+    }
+

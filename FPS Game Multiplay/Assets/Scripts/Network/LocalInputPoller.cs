@@ -21,7 +21,11 @@ public class LocalInputPoller : MonoBehaviour, INetworkRunnerCallbacks
 
     // 입력이 있을때 자동으로 호출
     public void OnInput(NetworkRunner runner, NetworkInput input)
-    {// NetworkInputData : 우리가 만든 구조체
+    {
+        if (GameManager.gm == null || GameManager.gm.pr == null)
+            return;
+
+        // NetworkInputData : 우리가 만든 구조체
         NetworkInputData localInput = new NetworkInputData();
 
         float h = Input.GetAxisRaw("Horizontal");
@@ -35,7 +39,13 @@ public class LocalInputPoller : MonoBehaviour, INetworkRunnerCallbacks
 
         // 버튼 세팅(열거형 Jump = 0, Input.GetButton("Jump") = bool)
         localInput.Buttons.Set(PlayerButtons.Jump, Input.GetButton("Jump"));
+        // GetMouseButtonDown()은 Update() 에서 사용하는거라 여기에 쓰면 안됨
+        localInput.Buttons.Set(PlayerButtons.Fire0, Input.GetMouseButton(0));
+        localInput.Buttons.Set(PlayerButtons.Fire1, Input.GetMouseButton(1));
 
+        localInput.mx = GameManager.gm.pr.mx;
+
+        // 매개변수가 참조형이라서 값이 변함
         input.Set(localInput);
     }
 

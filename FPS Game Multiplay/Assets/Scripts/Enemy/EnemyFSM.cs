@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.AI;
+using Fusion;
+using System.Threading.Tasks;
 
-public class EnemyFSM : MonoBehaviour
+public class EnemyFSM : NetworkBehaviour
 {
     // 에너미 상태 상수
     enum EnemyState
@@ -53,7 +55,8 @@ public class EnemyFSM : MonoBehaviour
     public float moveDistance = 20f;
 
     // 에너미의 체력
-    public int hp = 15;
+    // [Networked] 는 속성으로 사용해야함
+    [Networked] public int hp { get; set; } = 15;
 
     // 에너미의 최대 체력
     int maxHp = 15;
@@ -86,7 +89,7 @@ public class EnemyFSM : MonoBehaviour
         smith = GetComponent<NavMeshAgent>();
     }
 
-    private void Update()
+    public override void FixedUpdateNetwork()
     {
         // 현재 상태를 체크해 해당 상태별로 정해진 기능을 수행
         switch (m_State)
@@ -188,7 +191,7 @@ public class EnemyFSM : MonoBehaviour
         if (Vector3.Distance(transform.position, nearPlayer.transform.position) < attackDistance)
         {
             // 일정한 시간마다 플레이어를 공격
-            currentTime += Time.deltaTime;
+            currentTime += Runner.DeltaTime;
             if (currentTime > attackDelay)
             {
                 // player.GetComponent<PlayerMove>().DamageAction(attackPower);
@@ -268,7 +271,8 @@ public class EnemyFSM : MonoBehaviour
     }
     
     // 데미지 실행 함수
-    public void HitEnemy(int hitPower)
+    // async : 비동기
+    public async void HitEnemy(int hitPower)
     {
         // 만일, 이미 피격 상태이거나 사망 상태 또는 복귀 상태라면
         // 아무런 처리도 하지 않고 함수를 종료
@@ -281,6 +285,18 @@ public class EnemyFSM : MonoBehaviour
         // 내비게이션 에이전트의 이동을 멈추고 경로를 초기화
         smith.isStopped = true;
         smith.ResetPath();
+
+        // 오브젝트에 상태 권한이 없으면
+        if (!Object.HasStateAuthority)
+        {
+            // 상태권한 요청
+            Object.RequestStateAuthority();
+            while(Object.HasStateAuthority)
+            {
+                // 0.1 초를 잠깐 쉼(미리초 단위)
+                await Task.Delay(100);
+            }
+        }
 
         // 플레이어의 공격력만큼 에너미의 체력을 감소시킴
         hp -= hitPower;

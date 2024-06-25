@@ -6,6 +6,8 @@ using Fusion;
 enum PlayerButtons
 {
     Jump = 0,
+    Fire0 = 1,
+    Fire1 = 2,
 }
 
 public struct NetworkInputData : INetworkInput
@@ -14,4 +16,7 @@ public struct NetworkInputData : INetworkInput
 
     // 버튼이 눌려있다 안눌려있다 
     public NetworkButtons Buttons;
+
+    // 마우스 회전값 변수
+    public float mx;
 }

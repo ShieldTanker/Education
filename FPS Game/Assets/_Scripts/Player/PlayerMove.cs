@@ -73,6 +73,8 @@ public class PlayerMove : MonoBehaviour
         // 문제는 하늘을 바라보면 위로 떠버림
         dir = Camera.main.transform.TransformDirection(dir);
 
+        Debug.Log(dir);
+
         // 점프 후 바닥에 닿은 상태인지 확인
         if (isJumping && cc.collisionFlags == CollisionFlags.Below)
         {

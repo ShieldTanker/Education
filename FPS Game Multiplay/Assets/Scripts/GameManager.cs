@@ -28,6 +28,7 @@ public class GameManager : NetworkBehaviour
     }
 
     // 현재의 게임 상태 변수
+    public GameState gStateLocal;
     // [Networked] : 같은 세션에서 고유할수 있게 만듬(단 사용하려면 속성으로 사용해야함)
     [Networked] public GameState gState { get; set; }
 
@@ -46,7 +47,6 @@ public class GameManager : NetworkBehaviour
     public Slider hpSlider;
     public GameObject hitEffect;
 
-    public GameObject bulletEffect;
     public Text wModeText;
 
     public GameObject weapon01;
@@ -58,6 +58,9 @@ public class GameManager : NetworkBehaviour
     public GameObject crosshair02_zoom;
 
     public List<GameObject> players;
+
+    // 플레이어 로테이트 변수
+    public PlayerRotate pr;
 
     // Start() 를 Spawned() 로 바꿈
     public override void Spawned()
@@ -81,6 +84,7 @@ public class GameManager : NetworkBehaviour
     // 수신하고 처리 하는 프레임에 처리 됨
     public override void FixedUpdateNetwork()
     {
+        gStateLocal = gState;
         // 만일, 플레이어가 null 이 아니고 hp가 0이하라면
         if (player != null && player.hp <= 0)
         {
