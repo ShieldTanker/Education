@@ -1,0 +1,376 @@
+웹 프로그래밍 PHP(C언어 기반), JSP(자바 기반)
+
+우리는 PHP 사용
+
+클라이언트 에서 서버로 직접 접근하게 코드 를 만들면 코드 뜯을때
+비밀번호 유출 가능
+
+홈페이지를 만들지는 않고 URL 만 받아 송수신 하게 만듬
+
+XAMPP
+Apache + MariaDB + PHP + Perl 의 약자
+
+따로따로 받지않고 한꺼번에 패키지로 받는 이유 : 각 프로그램 마다 버전이 다를경우
+서로 호환이 안될수 있기에 서로 호환되는 버전으로 받음
+
+웹서버 : 다양한 운영체제에서 작동을 지원 하는 아파치 웹서버
+
+데이터베이스 : MariaDB(MySQL)
+
+웹프로그래밍 언어 : PHP 아파치 및 MariaDB 와 함께 쓰임
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+설치
+
+구글에 xampp 검색 > 공식 홈페이지 > 윈도우 버전 다운
+
+체크 전부 해제 후 (MariaDB 는 이미 깔려있음) 설치
+
+윈도우 탐색기 에 추가된 XAMPP 폴더 > XAMPP Control Panel > 자세히
+> 관리자 권한으로 실행
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+서버 구동
+
+Apache 칸의 Actions > Start
+
+브라우저 아무거나 실행 > : http://localhost/index.php
+접속하면 http://localhost/dashboard/ 로 주소 변경됨
+인터넷 창이 뜨면 서버 활성화 됨
+
+http 는 기본적으로 포트를 80번 사용(http 써있으면 80번 포트 라 생각하면 됨)
+전체 로 다 썼을떄 http://localhost:80/index.php 으로 씀
+127.0.0.1/dashboard 와도 같음
+
+https 는 암호화 된 사이트 로 443번 포트 사용(암호화도 연산이 있어 http 보다 느림)
+MariaDB 는 3306번 포트
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+http 형태 웹서버 포트 변경
+
+Actions 칸의 Config > httpd.conf 클릭
+> Listen 12.34.56.78.90 밑의 Listen 80 을 원하는 포트로 설정
+
+https 형태 웹서버 포트 변경
+Config > httpd-ssl.conf > 
+> Listen 12.34.56.78.90 밑의 Listen 443 을 원하는 포트로 설정
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+윈도우 탐색기 XAMPP 폴더의 XAMPP htdocs forder 클릭
+> (위에 링크 변환 된 http://localhost/dashboard/ 는
+링크의 dashboard 폴더 안의 웹을 실행한것)
+
+info.php 파일 만들고 내용 작성
+
+<?PHP
+$db = mysqli_connect("localhost", "root", "1234", "madang");
+if($db)
+	echo "connect : success<br>";
+else
+	echo "connect : failure<br>";
+
+?>
+
+htdocs 폴더에 php 폴더를 만든뒤 만들었던 info.php 넣기
+info.php 파일의 경로가 C:\xampp\htdocs\php 가 되야함
+
+http://localhost/php/info.php 로 들어갔을때
+> 화면에 connect : success 뜨면 서버 접속 성공
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+클라이언트 언어 : 명령어를 받아서 클라이언트에서 해석 하여 결과를 보여줌
+				서버의 명령어를 볼수 없음
+
+서버 언어 : 서버에서 처리하고 결과를 클라이언트에 보내줌 서버에서 컴파일되서 전송
+		   (PHP 코드 자체는 클라이언트에 가지 않음)
+
+클라이언트가 접속할때 마다 새로 해석하여 클라이언트에 스크립트 를 넘겨줌
+
+프론트엔드 : 클라이언트 쪽(클라이언트에 오브젝트 위치 배치)
+           꾸며주는건(폰트 등) : CSS,
+		   기능적인부분(형식같은게 안맞을때 오류창) : 자바스크립트
+
+백엔드 : 서버쪽(스크립트 언어 : C샤프, PHP, 파이썬, 자바 등) 의 언어사용
+        데이터 베이스 관리
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+링크 접속 할때 C:/DoyunUnity/PHP 폴더가 가 기본 경로가 되게 설정
+Config > httpd-ssl.conf 
+> DocumentRoot "C:/xampp/htdocs" 를 "C:/DoyunUnity/PHP",
+바로 아래 <Directory "C:/xampp/htdocs"> 를 <Directory "C:/DoyunUnity/PHP">로 변경
+
+저장후 서버 껏다 키기
+
+http://localhost/info.php 이 링크로 가면 정상 작동
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+HTML
+
+HTML 파일의 확장자는 .html 또는 .htm
+
+HTML 파일은 텍스트 파일임 인코딩 방식은 UTF-8 사용
+HTML 은 대소문자 구분 안함 (PHP 는 대소문자 구분하니 혼동 주의)
+
+HTML 의 태그는 대부분 <> 안에 씀
+HTML 파일은 <HTML> 태그로 시장하여 </HTML> 태그로 종료함
+
+html_basic.html 파일 생성
+
+<HTML>
+<HEAD>
+<META charset = "UTF-8">
+화면에 표시되지 않는 정보(타이틀, 인코딩 정보 등)
+</HEAD>
+<BODY>
+화면에 보이는 본체(주로 태그들을 표현)
+</BODY>
+</HTML>
+
+http://localhost/HTML/html_basic.html 로 접속
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+<HTML> 시작
+
+<HEAD> 머리 시작
+<META charset = "UTF-8">
+화면에 표시되지 않는 정보(타이틀: 페이지 상단 이름(네이버 등), 인코딩 정보 등)
+</HEAD> 머리 끝
+
+<BODY> 머리다음 으로 바디가 옴
+화면에 보이는 본체(주로 태그들을 표현)
+</BODY> 바디 끝
+
+</HTML> 끝
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+파일 생성 01_head.html
+
+<HTML>
+<HEAD>
+<TITLE>HTML5 메타정보</TITLE>
+	<META charset = "UTF-8">
+	<META name = "author" content = "Hong Seong Yong">
+	<META name = "keywords" content = "HTML5, CSS3, JavaScript, Jquery">
+	<META name = "description" content = "Web Programming">
+	<META http-equiv = "refresh" content = "10, http://cafe.naver.com/go2web">
+	<BASE href = "http://www.w3.org/" target = "_blank">
+</HEAD>
+<BODY>
+	<P>헤드 태그 내 메타정보에는 웹 문서를 만든 이, 검색 시 키워드, 문서에 대한 설명,
+	문서 내 기본 디렉터리 등이 포함됩니다.</P>
+	<P>이 문서는 10초 후 저자 카페로 이동합니다.</P>
+	<A href = "">여기를 클릭하면 기본 디렉터리로 설정된 www.w3.org 사이트로 이동합니다.</A>
+</BODY>
+</HTML>
+
+/////////////
+결과
+
+헤드 태그 내 메타정보에는 웹 문서를 만든 이, 검색 시 키워드, 문서에 대한 설명, 문서 내 기본 디렉터리 등이 포함됩니다.
+
+이 문서는 10초 후 저자 카페로 이동합니다.
+
+여기를 클릭하면 기본 디렉터리로 설정된 www.w3.org 사이트로 이동합니다.
+
+////////////
+
+해석
+
+<HTML>
+<HEAD>
+<TITLE>HTML5 메타정보</TITLE>   타이틀(상단 탭 이름)
+	<META charset = "UTF-8">
+	<META name = "author" content = "Hong Seong Yong">  // author 라는 이름의 태그에 Hong Seong Yong 을 넣음
+	
+	<META name = "keywords" // keywords 태그로 검색시
+	content = "HTML5, CSS3, JavaScript, Jquery"> // HTML5, CSS3, JavaScript, Jquery 들이 나옴
+	
+	// http-equiv = "refresh" 새로고침
+	// content = "10, http://cafe.naver.com/go2web"
+	// 설정한 초 가 지나고 콘텐츠에 링크있으면 해당 링크로 이동
+	<META http-equiv = "refresh" content = "10, http://cafe.naver.com/go2web">
+	<BASE href = "http://www.w3.org/" target = "_blank">
+</HEAD>
+<BODY>
+	<P>헤드 태그 내 메타정보에는 웹 문서를 만든 이, 검색 시 키워드, 문서에 대한 설명,
+	문서 내 기본 디렉터리 등이 포함됩니다.</P>
+	<P>이 문서는 10초 후 저자 카페로 이동합니다.</P>
+	
+	링크 관련 단어로 A 를 씀 "안의 링크로 이동"
+	"" 가 비어있을때 위에 <BASE href = "http://www.w3.org/" target = "_blank"> 로 이동
+	<A href = "">여기를 클릭하면 기본 디렉터리로 설정된 www.w3.org 사이트로 이동합니다.</A>
+</BODY>
+</HTML>
+
+///////////////////////////////////////////////////////////////////////////////////////
+
+새 파일 작성 02_space.html
+
+<HTML>
+<HEAD>
+	<TITLE>공백처리 문제</TITLE>
+	<META charset = "UTF-8">
+</HEAD>
+<BODY>
+	HTML5에서는
+	엔터, 탭,			스페이스바와 같은
+	키보드 값을 인식하지 않습니다.
+	<P>HTML5에서는 스페이스바 대신 특수문자를 사용해주세요</P>
+</BODY>
+</HTML>
+
+결과
+
+HTML5에서는 엔터, 탭, 스페이스바와 같은 키보드 값을 인식하지 않습니다.
+HTML5에서는 스페이스바 대신 특수문자를 사용해주세요
+
+해석
+
+<P> 하나의 문단으로 보는 키워드 </P>
+
+////////////////////////////////////////////////////////////////////////////////////////////
+
+새 파일 작성 03_comment.html
+
+<!-- 작성자 : 홍성용 -->
+<HTML>
+<HEAD>
+	<!-- 문서의 메타정보를 작성하는 부분입니다. -->
+	<TITLE>웹 문서 주석</TITLE>
+	<META charset = "UTF-8">
+</HEAD>
+<BODY>
+	<!-- 이 문서는 HTML5 웹 표준 문서입니다. -->
+	<H1>주석은 소스코드를 설명하거나 불필요한 부분을 일시적으로 사용하지 않기 위해 씁니다.</H1>
+</BODY>
+</HTML>
+
+<!-- 주석 -->
+<H1> 글자 크기 조정 (작을수록 크기 커짐)
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+새 파일 작성
+
+04_charref.html
+
+<HTML>
+<HEAD>
+	<META charset = "UTF-8">
+</HEAD>
+<BODY>
+	<HEADER>
+		<CENTER>
+			<H1>&lt; HTML 특수문자 &gt;</H1>
+		</CENTER>
+	</HEADER>
+	<SECTION>
+		<ARTICLE>
+			&num; 풀스택 개발자를 위한 웹 프로그래밍 &num;
+			<P></P>
+			HTML5 &#38; CSS3 &#38; JavaScript &#38; JQuery
+		</ARTICLE>
+	</SECTION>
+	<HR size="10" align="left" width=90% noshade="noshade"></HR>
+	<FOOTER>
+		<SMALL>
+			&nbsp;&nbsp; &copy; 한빛아카데미 &nbsp;&nbsp;
+			&nbsp;&nbsp; &reg; 2017
+		</SMALL>
+	</FOOTER>
+</BODY>
+</HTML>
+
+
+< HTML 특수문자 >
+# 풀스택 개발자를 위한 웹 프로그래밍 #
+HTML5 & CSS3 & JavaScript & JQuery
+----------------------------------------
+   © 한빛아카데미       ® 2017
+   
+   
+<HTML>
+<HEAD>
+	<META charset = "UTF-8">
+</HEAD>
+<BODY>
+	<HEADER>
+		<CENTER>   // 가운데 정렬이 됨
+			<H1>&lt; HTML 특수문자 &gt;</H1>  //&lt; 꺽쇠괄호 열기(<), &gt;꺽쇠괄호 닫기(>)
+		</CENTER>
+	</HEADER>
+	
+	<SECTION>
+		<ARTICLE>
+			&num; 풀스택 개발자를 위한 웹 프로그래밍 &num;   // &num; #특수문자 출력
+			<P></P>                                     // 공간을 띄워주려고 열고 바로 닫음
+			HTML5 &#38; CSS3 &#38; JavaScript &#38; JQuery // &#38 아스키코드 에 해당하는 문자 출력
+		</ARTICLE>
+	</SECTION>
+	
+	// 가로줄 출력 굵기 10 픽셀, 가로 길이 : 가로길이 전체의 퍼센트(픽셀수도 가능)
+	// noshade = "noshade" 쉐이드 없이
+	<HR size="10" align="left" width=90% noshade="noshade"></HR>
+	
+	<FOOTER>
+		<SMALL>
+			&nbsp;&nbsp; &copy; 한빛아카데미 &nbsp;&nbsp;   // &nbsp; 공백처리
+			&nbsp;&nbsp; &reg; 2017					// &copy; : © 특수문자, &reg; : ® 특수문자
+		</SMALL>
+	</FOOTER>
+</BODY>
+</HTML>
+
+
+///////////////////////////////////////////////////////////////////////////////
+
+새 파일 작성 05_pretag.html
+
+<HTML>
+<HEAD>
+	<META charset = "UTF-8">
+</HEAD>
+<BODY>
+	<PRE>
+  ### 풀스택 개발자를 위한 웹 프로그래밍 ###	
+
+    HTML5 & CSS3 & JavaScript & JQuery
+
+           < 가격 : 35,000원 >
+	</PRE>
+</BODY>
+</HTML>
+
+
+<PRE> 태그 안에는 공백을 처리 함
+
+/////////////////////////////////////////////////////////////////////////////
+
+새 파일 작성 06_texttag.html
+
+<HTML>
+<HEAD>
+	<META charset = "UTF-8">
+</HEAD>
+<BODY>
+	<P><B>텍스트 볼드 처리</B></P>
+	<P><STRONG>텍스트 중요 처리</STRONG></P>
+	<P><I>텍스트를 이탤릭체 로</I></P>
+	<P><EM>텍스트 강조 표시</EM></P>
+	<P><INS>텍스트 밑줄 처리</INS></P>
+	<P><DEL>텍스트 가운데 선 처리</DEL></P>
+	<P>텍스트<SUB>아래첨자</SUB>텍스트<SUP>윗첨자</SUP></P>
+	<P><MARK>텍스트에 하이라이트 표시</MARK></P>
+</BODY>
+</HTML>
+
+글 꾸미기는 CSS 를 주로 사용함으로 위 태그는 간단하게 웹 페이지 만들때 사용
