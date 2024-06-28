@@ -374,3 +374,347 @@ HTML5 & CSS3 & JavaScript & JQuery
 </HTML>
 
 글 꾸미기는 CSS 를 주로 사용함으로 위 태그는 간단하게 웹 페이지 만들때 사용
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+새파일 만들기 07_atag.html
+
+<HTML>
+<HEAD>
+	<META charset = "UTF-8">
+
+</HEAD>
+<BODY>
+	<A href = "http://www.w3.org" target="_blank">W3C 사이트 (blank window)</A>
+	<BR><BR>
+	<A href = "http://www.w3.org" target="_self">W3C 사이트 (self window)</A>
+	<BR><BR>
+	<A href = "http://www.w3.org" target="_parent">W3C 사이트 (parent window)</A>
+	<BR><BR>
+	<A href = "http://www.w3.org" target="_top">W3C 사이트 (top window)</A>
+</BODY>
+</HTML>
+
+
+해석
+
+<HTML>
+<HEAD>
+	<META charset = "UTF-8">
+
+</HEAD>
+<BODY>
+	// A 태그 로 작동 하며 클릭 했을때 이동할 경로 및 이동할 링크 
+	// 새 탭을 만듬
+	<A href = "http://www.w3.org" target="_blank">W3C 사이트 (blank window)</A>
+	
+	// <BR> 엔터 친것과 같음
+	<BR><BR>
+	
+	// 자신의 탭을 바꿈, 페이지가 나뉘어 졌을때 자신의 구역만 바뀜
+	<A href = "http://www.w3.org" target="_self">W3C 사이트 (self window)</A>
+	<BR><BR>
+	
+	// 연쪽이 부모가 됨
+	<A href = "http://www.w3.org" target="_parent">W3C 사이트 (parent window)</A>
+	<BR><BR>
+	
+	// 페이지가 나눠저 있을때 그 부분만 바뀌는게 아닌 전체가 바뀜
+	<A href = "http://www.w3.org" target="_top">W3C 사이트 (top window)</A>
+</BODY>
+</HTML>
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+08.inpage.html
+
+<HTML>
+<HEAD>
+	<META charset = "UTF-8">
+
+</HEAD>
+<BODY>
+	<A href="#user">[이름]</A> &nbsp;
+	<A href="#addr">[주소]</A> &nbsp;
+	<A href="#tel">[전화번호]</A> &nbsp;
+	<A href="#foot">[참고]</A> &nbsp;
+	
+	<P>정보 영역</P>
+
+	
+	<P><A name="user">홍민성</A></P>
+	<A href="#top">[TOP]</A>
+	
+	<P>정보 영역</P>
+
+	
+	<P><A name="addr">서울 강남구 신사동 291번지</A></P>
+	<A href="#top">[TOP]</A>
+
+	<P>정보 영역</P>
+
+	
+	<P><A name="tel">02-2323-0909</A></P>
+	<A href="#top">[TOP]</A>
+	
+		<P>정보 영역</P>
+
+	
+</BODY>
+</HTML>
+
+
+<HTML>
+<HEAD>
+	<META charset = "UTF-8">
+
+</HEAD>
+<BODY>
+	<A href="#user">[이름]</A> &nbsp;    // 키워드 설정 후 같은 이름의 키워드로 이동
+	
+	// http://localhost/HTML/08_inpage.html#addr 로 하면 페이지 열때 중간부분 부터 열기 가능
+	<A href="#addr">[주소]</A> &nbsp;
+	<A href="#tel">[전화번호]</A> &nbsp;
+	<A href="#foot">[참고]</A> &nbsp;
+	
+	<P>정보 영역</P>
+
+	
+	<P><A name="user">홍민성</A></P>    // user 라는 키워드 로 이동
+	<A href="#top">[TOP]</A>           // 페이지 최상단 으로 이동
+	
+	<P>정보 영역</P>
+
+	
+	<P><A name="addr">서울 강남구 신사동 291번지</A></P>
+	<A href="#top">[TOP]</A>
+
+	<P>정보 영역</P>
+
+	
+	<P><A name="tel">02-2323-0909</A></P>
+	<A href="#top">[TOP]</A>
+	
+		<P>정보 영역</P>
+
+	
+</BODY>
+</HTML>
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+<HTML>
+<HEAD>
+	<META charset = "UTF-8">
+</HEAD>
+<BODY>
+	<!-- 무순서 목록 -->
+	<SECTION>
+		<ARTICLE>
+			<H2>무순서 목록</H2>
+			<UL>
+				<LI>Coffee</LI>
+				<LI>Tea
+					<UL>
+						<LI>Blank tea</LI>
+						<LI>Green tea</LI>
+					</UL>
+				</LI>
+				<LI>Milk</LI>
+			</UL>
+		</ARTICLE>
+	</SECTION>
+	<!-- 순서 목록 -->
+	<SECTION>
+		<ARTICLE>
+			<H2>순서 목록</H2>
+				<OL>
+					<LI>Apples</LI>
+					<LI>Bananas</LI>
+					<LI>Lemons</LI>
+					<LI>Oranges</LI>
+				</OL>
+		</ARTICLE>
+	</SECTION>
+</BODY>
+</HTML>
+
+
+
+<HTML>
+<HEAD>
+	<META charset = "UTF-8">
+</HEAD>
+<BODY>
+	<!-- 무순서 목록 -->
+	<SECTION>
+		<ARTICLE>
+			<H2>무순서 목록</H2>
+			// UL 로 한 묶음으로 만듬
+			<UL>
+				// LI 한 묶음의 구성 요소들
+				<LI>Coffee</LI>
+				<LI>Tea
+					// 구성요소들 안의 또 한 묶음을 만듬
+					<UL>
+						<LI>Blank tea</LI>
+						<LI>Green tea</LI>
+					</UL>
+				</LI>
+				<LI>Milk</LI>
+			</UL>
+		</ARTICLE>
+	</SECTION>
+	<!-- 순서 목록 -->
+	<SECTION>
+		<ARTICLE>
+			<H2>순서 목록</H2>
+				// 순서대로 표기 하게 하기
+				<OL>
+					<LI>Apples</LI>
+					<LI>Bananas</LI>
+					<LI>Lemons</LI>
+					<LI>Oranges</LI>
+				</OL>
+		</ARTICLE>
+	</SECTION>
+</BODY>
+</HTML>
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+<HTML>
+<HEAD>
+	<META charset = "UTF-8">
+</HEAD>
+<BODY>
+	// border : 선의 굵기, style : 가로 크기의 50% 
+	<TABLE border="1" style="width:50%">
+		// TR 하나의 행
+		<TR>
+			// TH 제목 (자동으로 굵은 글씨)
+			<TH>이름</TH>
+			<TH>점수</TH>
+		</TR>
+		<TR>
+			// TD 하나의 열
+			<TD>홍민성</TD>
+			<TD>90</TD>
+		</TR>
+		<TR>
+			<TD>최민수</TD>
+			<TD>80</TD>
+		</TR>
+		<TR>
+			<TD>심은경</TD>
+			<TD>70</TD>
+		</TR>
+	</TABLE>
+</BODY>
+</HTML>
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+<HTML>
+<HEAD>
+	<META charset = "UTF-8">
+</HEAD>
+<BODY>
+	<TABLE border="1" style="width :100%">
+		<CAPTION>행 통합 테이블</CAPTION>
+		<TR>
+			<TH>1행</TH>
+			<TD>1행 1열</TD>
+		</TR>
+		<TR>
+			// 가로선 합치기(위아래 통합)
+			<TH rowspan="2">2행</TH>
+			<TD>2행 2열</TD>
+		</TR>
+		<TR>
+			<TD>3행 2열</TD>
+		</TR>
+	</TABLE>
+	
+	<TABLE border="1" style="width:100%">
+		<CAPTION>열 통합 테이블</CAPTION>
+		<TR>
+			<TH>1열</TH>
+			// 세로선 합치기(좌우 통합)
+			<TH colspan="2">2열</TH>
+		</TR>
+		<TR>
+			<TD>2행 1열</TD>
+			<TD>2행 2열</TD>
+			<TD>2행 3열</TD>
+		</TR>
+	</TABLE>
+</BODY>
+</HTML>
+
+
+
+/////////////////////////////////////////////////////////////
+
+<HTML>
+<HEAD>
+	<META charset = "UTF-8">
+</HEAD>
+<BODY>
+	<TABLE border ="1" style = "width:70%">
+		<TR>
+			<TD>가</TD>
+			<TD>나</TD>
+			<TD>다</TD>
+			<TD rowspan = "4">라</TD>
+		</TR>
+		
+		<TR>
+			<TD>마</TD>
+			<TD colspan="2" rowspan = "3">바</TD>
+		</TR>
+		
+		<TR>
+			<TD>사</TD>
+		</TR>
+		
+		<TR>
+			<TD>아</TD>
+		</TR>
+		
+		<TR>
+			<TD colspan="2">자</TD>
+			<TD colspan="2">차</TD>
+		</TR>
+		
+		<TR>
+			<TD colspan="4">카</TD>
+		</TR>
+</BODY>
+</HTML>
+
+///////////////////////////////////////////////////////////////
+
+<HTML>
+<HEAD>
+	<META charset = "UTF-8">
+</HEAD>
+<BODY>
+	<H3>이미지 기본표현</H3>
+	// html 파일이 있는 폴더에 이미지를 불러옴
+	// alt : 파일이 없을때 출력
+	<IMG src="html5.jpg" alt="이미지가 표시되지 않습니다.">
+	
+	<H3>이미지에 설명 추가 & 오른쪽 정렬</H3>
+	<IMG src="html5.jpg" title="HTML5 로고 이미지" style="float:right">
+	
+	<H3>이미지의 크기를 픽셀 단위로 조정</H3>
+	<IMG src="html5.jpg" style="wudth:50px;height:60px;">
+	
+	<H3>이미지의 크기 %단위로 조정</H3>
+	<IMG src="html5.jpg" width=50% height=40%>
+</BODY>
+</HTML>
