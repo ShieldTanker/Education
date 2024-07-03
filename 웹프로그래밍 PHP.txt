@@ -67,6 +67,7 @@ Config > httpd-ssl.conf >
 info.php 파일 만들고 내용 작성
 
 <?PHP
+// mysqli_connect : 데이터 베이스 접속(접속할 아이피, 사용자 이름, 비밀번호, 데이터 베이스 이름)
 $db = mysqli_connect("localhost", "root", "1234", "madang");
 if($db)
 	echo "connect : success<br>";
@@ -718,3 +719,907 @@ HTML5 & CSS3 & JavaScript & JQuery
 	<IMG src="html5.jpg" width=50% height=40%>
 </BODY>
 </HTML>
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+PHP 
+
+주석은 C# 과 같음
+
+변수 이름 지을때 제일앞에 $ 이 붙으며 숫자로 시작 못함
+
+가능 : $abc123 $a_bc123
+불가능 : $1abc
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+12-03.php 파일 만들기
+
+<?php
+	// php 는 값에 따라 타입이 정해짐
+	$a = 100;
+	// 띄우고자 하는 내용을 print 하고 한칸 띄운뒤 변수 혹은 내용 작성
+	print $a;
+	
+	// php 코드 중간에 html 코드가 올수 있음
+	$b = "<BR>안녕하세요? MariaDB";
+	echo $b;
+?>
+
+결과
+
+100
+안녕하세요? MariaDB
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+12-04.php 파일 생성
+
+<?php
+// 12-04.php
+// 하나의 변수가 타입이 바뀔수 있음
+$a = 123;		echo gettype($a), "<BR>";
+$a = 123.123;	echo gettype($a), "<BR>";
+$a = "MariaDB";	echo gettype($a), "<BR>";
+$a = true;		echo gettype($a), "<BR>";
+$a = array(1, 2, 3);	echo gettype($a), "<BR>";
+?>
+
+결과
+
+integer
+double
+string
+boolean
+array
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+12-05.php 파일 생성
+
+<?php
+// 12-05.php
+// 문자열 쓸때 "" 와 '' 사용 가능
+$str1 = "이것이 MariaDB다<BR>"; 	echo $str1;
+$str2 = 'PHP 프로그래밍<BR>'; 	echo $str2;
+// 쿼리 안에서도 문자열 표현 하기 때문에 php 는 "", sql 은 '' 이 보편적으로 쓰임
+$str3 = "SELECT * FROM userTBL WHERE userID='JYP'"; echo $str3;
+?>
+
+결과
+
+이것이 MariaDB다
+PHP 프로그래밍
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+12-06.php 파일 생성
+
+<?php
+$a = 100;
+$b = 200;
+
+if($a > $b)
+	{echo "a가 b보다 큽니다.";}
+else
+	{echo "b가 a보다 큽니다.";}
+if($a <> $b)
+	{echo "a와 b가 다릅니다.";}
+else
+	{echo "a와 b가 같습니다.";}
+?>
+
+결과
+
+b가 a보다 큽니다.a와 b가 다릅니다.
+
+비교 연산자 ==, >=, <=, <>
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+12-07.php 파일 생성
+
+<?php
+$jumsu = 83;
+
+if($jumsu >= 90)
+	echo "A학점";
+elseif ($jumsu >= 80)
+	echo "B학점";
+elseif($jumsu >=70)
+	echo "C학점";
+elseif($jumsu >= 60)
+	echo "D학점";
+else
+	echo "F학점";
+?>
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+12-08.php 파일 생성
+
+<?php
+$jumsu = 83;
+
+// int value 의 줄임말 소수점 버리고 정수형만 표시하기 위해 사용
+switch (intval ($jumsu / 10))
+{
+	case 10 :
+	case 9 :
+		echo "A학점"; break;
+	case 8 :
+		echo "B학점"; break;
+	case 7 :
+		echo "C학점"; break;
+	case 6 :
+		echo "D학점"; break;
+	default :
+		echo "F학점";
+}
+?>
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+12-09.php 파일 생성
+
+<?php
+for ($i = 1; $i <= 10; $i++)
+	echo $i, " ";
+?>
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+12-10.php 파일 생성
+
+<?php
+$hap = 0;
+for ($i = 123; $i <= 456; $i += 2)
+	$hap += $i;
+
+echo "123 부터 456 까지 홀수의 합계 : ", $hap;
+?>
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+12-11.php 파일 생성
+
+<?php
+$hap = 0;
+
+$i = 123;
+while ($i <= 456)
+{
+	$hap += $i;
+	$i += 2;
+}
+echo "123부터 456까지 홀수의 합계 : ",$hap;
+?>
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+12-12.php 파일 생성
+
+<?php
+// 배열에 타입 섞여도 상관없음
+$myArray = array(100, 'MariaDB', 123.123);
+echo $myArray[0], " ", $myArray[1], " ", $myArray[2], "<BR>";
+
+// 1부터 3 까지 들어감(php 에선 1부터 3개가 아님)
+$myArray = range(1,3);
+echo $myArray[0], " ", $myArray[1], " ", $myArray[2], "<BR>";
+
+// 1부터 10 까지 2씩 증가하는값을 저장(1,3,5,7,9 의 값이 들어감)
+$myArray = range(1, 10, 2);
+echo $myArray[0], " ", $myArray[4], "<BR>";
+
+// 직접 배열에 지정
+$newArray[0] = 'This';
+// $newArray[1] = 'is';
+$newArray[2] = 'MariaDB';
+
+// 중간에 배열 하나 빠져도 코드 실행됨
+echo $newArray[0], " ", $newArray[1], " ", $newArray[2], "<BR>";
+?>
+
+결과
+
+100 MariaDB 123.123
+1 2 3
+1 9
+This
+Warning: Undefined array key 1 in C:\DoyunUnity\PHP\12-12.php on line 14
+MariaDB
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+12-14.php 파일 생성
+
+<?php
+$myArray = range(1,10);
+
+echo "임의로 섞은 값 ==> ";
+// 섞을때 마다 랜덤으로 순서가 나옴
+shuffle($myArray);
+
+// C# 과 달리 $data in $myArray 가 아니라 아래처럼 함
+foreach($myArray as $data)
+	echo $data, " ";
+	
+echo "<BR>오름차순 정렬 ==> ";
+sort($myArray);
+foreach($myArray as $data)
+	echo $data, " ";
+
+echo "<BR>내림차순 정렬 ==> ";
+rsort($myArray);
+foreach($myArray as $data)
+	echo $data, " ";
+
+echo "<BR>순서를 반대로 ==> ";
+$revArray = array_reverse($myArray);
+foreach($revArray as $data)
+	echo $data, " ";
+?>
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+<?php
+// 날짜를 년-월-일 형식으로 표현
+$today = "현재는 ".date("Y-M-J")." 입니다.";
+echo $today, "<BR>";
+
+$ary = array(100, 50, 200, 7);
+echo "최대:", max($ary), "최소:", min(-123, 50, 999), "<BR>";
+
+echo pi(), " ", round(M_PI), " ",ceil(M_PI), "<BR>";
+
+$str = "   This is Maria DB   ";
+// 좌우 공백 제거
+$str = trim($str);
+echo "#", $str, "#", "<BR>";
+
+// 문자열 길이 값
+echo "문자열 길이:", strlen($str), "<BR>";
+
+// 문자(문자열)을 30 길이만큼 반복
+echo str_repeat("-", 30), "<BR>";
+
+// This is MariaDB 의 MariaDB 를 마리아디비 로 교체
+echo str_replace("MariaDB", "마리아디비", "This is MariaDB"), "<BR>";
+
+// 문자열을 특정 크기마다 잘라줌
+$ary = str_split("This is MariaDB", 3);
+// 배열의 각 인덱스별로 값을 표시
+print_r($ary); echo "<BR>";
+echo "<BR>";
+
+// " " 별로 나누어줌
+$ary = explode(" ", "This is MariDB");
+print_r($ary); echo "<BR>";
+
+// " " 별로 붙여줌
+echo implode (" ", $ary), "<BR>";
+
+// 태그 인식함
+$myHTML = "<A href = 'www.hanbit.co.kr'>
+한빛미디어</A><BR>";
+echo $myHTML;
+
+// 태크 인식 안하게 할수 있음
+echo htmlspecialchars($myHTML);
+?>
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+12-18.php
+
+php 여도 HTML 작동함
+
+<HTML>
+<HEAD>
+<META http-equiv="content-type" content="text/html; charset=utf-8">
+</HEAD>
+<BODY>
+
+<H1>이 파일은 *.PHP 입니다.</H1>
+
+</BODY>
+</HTML>
+
+//////////////////////////////////////////////////////////////////////////
+
+12-19.php 파일 생성
+
+php 와 html 을 같이 사용 가능
+
+php 코드는 위에서부터 연산
+
+//서버에서 먼저 연산 함(클라이언트는 값이 뭔지 모름)
+<?php
+$num1 = 100;
+$num2 = 200;
+$sum = $num1 + $num2;
+?>
+
+<HTML>
+<HEAD>
+<META http-equiv="content-type" content="text/html; charset=utf-8">
+</HEAD>
+<BODY>
+// 서버에서 연산한 값을 가져옴
+<H1> 계산 결과는 <?php echo $sum ?> 입니다. </H1>
+// 한 개의 값만 출력 하려면 이렇게 줄일수 있음(TD 태그에 많이 쓰임)
+<H1> 계산 결과는 <?=$sum ?> 입니다. </H1>
+
+</BODY>
+</HTML>
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+브라우저(클라이언트) 에서 서버로 입력한 값을 보내려면 php 코드로 보내야함
+
+POST : 데이터 노출없이 페이지 주소만 보임, 안전한 데이터 전달이 가능
+
+GET : 주소뒤에 '?변수=값&변수=값' 방식으로 전달, 전달되는 데이터 노출 위험이 큼
+
+주로 POST 방식이 쓰임
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+send.html 파일 생성
+
+<HTML>
+<HEAD>
+<META http-equiv="content-type" content="text/html; charset=utf-8">
+</HEAD>
+<BODY>
+// method : 데이터 전송 방식 설정
+// action : 서버에있는 어느페이지에다가 전송할지
+			(receive.php 라는 파일에 입력값 전송)
+	// post 방식으로 전송
+<!-- <FORM method = "get" action="receive.php"> -->
+<FORM method = "post" action="receive.php">
+	// INPUT 태그를 이용하여 사용, 텍스트를 입력하면 텍스트박스가됨
+	아이디 : <INPUT type="text" name="userID"><BR>
+	이름 : <INPUT type="text" name="userNAME"><BR>
+	<BR><BR>
+	// 위에 입력값을 서버쪽에 보내야할때 INPUT type="submit" 사용
+	<INPUT type="submit" value="전송">
+</FORM>
+</BODY>
+</HTML>
+
+///////////////////////////////////////////////////////////////////////////////
+
+receive.php 파일 생성
+
+<?php
+// GET 방식으로 받았으니 GET 사용
+// $userID = $_GET["userID"];
+// $userNAME = $_GET["userNAME"];
+
+// POST 방식으로 받을때는 POST 사용
+$userID = $_POST["userID"];
+$userNAME = $_POST["userNAME"];
+
+echo "전달 받은 아이디 : ", $userID, "<BR>";
+echo "전달 받은 이름 : ", $userNAME, "<BR>";
+?>
+
+/////////////////////////////////////////////////////////////////////////////
+
+                      회원 관리 시스템 초기화면
+	
+	회원 조회 화면    신규회원 입력화면        회원 정보 수정화면     회원 삭제 화면
+	selcet.php       insert.php            update.php         delete.php
+	
+	                회원 입력 결과           회원 수정 결과       회원 삭제 결과
+				    insert_result.php      update_result.php  delete_result.php
+					
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+main.html 파일 생성
+
+member 폴더 만들고 안에 main.html 파일 넣기
+
+<HTML>
+<HEAD>
+	<META http-equiv="content-type" content="text/html; charset=utf-8">
+</HEAD>
+<BODY>
+<H1> 회원 관리 시스템 </H1>
+
+// 회원 조회는 데이터를 전달할 값이 없기에 A태그로 함
+<A href="select.php"> (1) 회원 조회 (조회 후 수정/삭제 가능) </A><BR><BR>
+<A href="insert.php"> (2) 신규 회원 등록 </A><BR><BR>
+
+<FORM method="get" action="update.php">
+	(3)회원 수정 - 회원 아이디 : <INPUT type="text" name="userID">
+	<INPUT type="submit" value="수정">
+</FORM>
+
+<FORM method="get" action="delete.php">
+	(4)회원 삭제 - 회원 아이디 : <INPUT type="text" name="userID">
+	<INPUT type="submit" value="삭제">
+</FORM>
+</BODY>
+</HTML>
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+서버와 데이터 베이스 연동
+
+13-02.php 파일 생성
+
+<?PHP
+
+// mysqli_connect : 데이터 베이스 접속
+// mysqli_connect(접속할 아이피, 사용자 이름, 비밀번호, 데이터베이스 이름)
+$con = mysqli_connect("localhost", "root", "1234", "");
+
+if($con)
+	echo "connect : success<br>";
+else
+	echo "connect : failure<br>";
+
+// 명령어 에 ; 생략 가능
+$sql = "CREATE DATABASE sqlDB";
+
+// 명령어 실행(접속경로가 지정되어있는 변수, 명령어)
+$ret = mysqli_query($con, $sql);
+
+if ($ret)
+{
+	echo "sqlDB가 성공적으로 생성됨";
+}
+else
+{
+	echo "sqlDB 생성 실패!!<BR>";
+	echo "실패 원인 : ".mysqli_error($con);
+}
+
+// 실행 안하면 계속 접속중
+mysqli_close($con);
+?>
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+13-03.php 파일 생성
+
+<?PHP
+// mysqli_connect(접속할 아이피, 사용자 이름, 비밀번호, 데이터베이스 이름)
+$con = mysqli_connect("localhost", "root", "1234", "sqlDB");
+if($con)
+	echo "connect : success<br>";
+else
+	echo "connect : failure<br>";
+
+$sql = "CREATE TABLE userTbl
+		(
+			userID		CHAR(8) NOT NULL PRIMARY KEY,
+			name 		VARCHAR(10) NOT NULL,
+			birthYear	INT NOT NULL,
+			addr		CHAR(2) NOT NULL,
+			mobile1		CHAR(3),
+			mobile2		CHAR(8),
+			height		SMALLINT,
+			mDate		DATE
+		)";
+$ret = mysqli_query($con, $sql);
+
+if ($ret)
+{
+	echo "userTBL 테이블이 성공적으로 생성됨";
+}
+else
+{
+	echo "userTBL 테이블 생성 실패!!<BR>";
+	echo "실패 원인 : ".mysqli_error($con);
+}
+
+mysqli_close($con);
+?>
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+<?PHP
+$con = mysqli_connect("localhost", "root", "1234", "sqlDB");
+if($con)
+	echo "connect : success<br>";
+else
+	echo "connect : failure<br>";
+
+$sql = "
+	INSERT INTO userTbl VALUES
+	('LSG', '이승기', 1987, '서울', '011', '1111111', 182, '2008-8-8'),
+	('KBS', '김범수', 1979, '경남', '011', '2222222', 173, '2012-4-4'),
+	('KKH', '김경호', 1971, '전남', '019', '3333333', 177, '2007-7-7'),
+	('JYP', '조용필', 1950, '경기', '011', '4444444', 166, '2009-4-4'),
+	('SSK', '성시경', 1979, '서울', NULL  , NULL      , 186, '2013-12-12'),
+	('LJB', '임재범', 1963, '서울', '016', '6666666', 182, '2009-9-9'),
+	('YJS', '윤종신', 1969, '경남', NULL  , NULL      , 170, '2005-5-5'),
+	('EJW', '은지원', 1972, '경북', '011', '8888888', 174, '2014-3-3'),
+	('JKW', '조관우', 1965, '경기', '018', '9999999', 172, '2010-10-10'),
+	('BBK', '바비킴', 1973, '서울', '010', '0000000', 176, '2013-5-5')
+";
+$ret = mysqli_query($con, $sql);
+
+if ($ret)
+{
+	echo "userTBL 이 성공적으로 수정됨";
+}
+else
+{
+	echo "userTBL 테이블 수정 실패!!<BR>";
+	echo "실패 원인 : ".mysqli_error($con);
+}
+mysqli_close($con);
+?>
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+13-05.php 파일 생성
+
+<?PHP
+$con = mysqli_connect("localhost", "root", "1234", "sqlDB");
+if($con)
+	echo "connect : success<br>";
+else
+	echo "connect : failure<br>";
+
+$sql = "SELECT * FROM userTBL";
+
+$ret = mysqli_query($con, $sql);
+
+if ($ret)
+{
+	// mysqli_num_rows(T) : 몇개의 레코드가 있는지 확인
+	echo mysqli_num_rows($ret), "건이 조회됨.<BR><BR>";
+}
+else
+{
+	echo "userTBL 테이블 조회 실패!!<BR>";
+	echo "실패 원인 : ".mysqli_error($con);
+}
+
+// mysqli_fetch_array(T) : 레코드 한줄씩 읽어와 $row 에 저장
+// (while 문에서 더이상 읽어올 수 없을때까지 실행)
+while ($row = mysqli_fetch_array($ret))
+{
+	// echo $row['userID'], " ", $row['name'], " ", $row['height'], " ", "<BR>";
+	// 컬럼 이름뿐 아니라 번호로도 데이터 접근 가능
+	echo $row[0], " ", $row[1], " ", $row[6], " ", "<BR>";
+}
+
+mysqli_close($con);
+?>
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+selcet.php 파일 생성 > member 폴더 안에 넣기
+
+<?php
+$con = mysqli_connect("localhost", "root", "1234", "sqlDB");
+
+$sql = "SELECT * FROM userTBL";
+
+$ret = mysqli_query($con, $sql);
+if ($ret)
+{
+	$count = mysqli_num_rows($ret);
+}
+else
+{
+	echo "userTBL 데이터 조회 실패!!<BR>";
+	echo "실패 원인 : ".mysqli_error($con);
+	exit();
+}
+
+echo "<H1> 회원 조회 결과 </H1>";
+
+// 테이블 열기
+echo "<TABLE border = 1>";
+
+echo "<TR>";
+echo "<TH>아이디</TH><TH>이름</TH><TH>출생년도</TH><TH>지역</TH><TH>국번</TH>";
+echo "<TH>전화번호</TH><TH>키</TH><TH>가입일</TH><TH>수정</TH><TH>삭제</TH>";
+
+echo "</TR>";
+
+// 반복문으로 열 추가
+while ($row = mysqli_fetch_array($ret))
+{
+	echo "<TR>";
+	echo "<TD>", $row['userID'], "</TD>";
+	echo "<TD>", $row['name'], "</TD>";
+	echo "<TD>", $row['birthYear'], "</TD>";
+	echo "<TD>", $row['addr'], "</TD>";
+	echo "<TD>", $row['mobile1'], "</TD>";
+	echo "<TD>", $row['mobile2'], "</TD>";
+	echo "<TD>", $row['height'], "</TD>";
+	echo "<TD>", $row['mDate'], "</TD>";
+	
+	// URL 자체에서 값을 전달함
+	echo "<TD><A href='update.php?userID=", $row['userID'], "'>수정</A></TD>";
+	echo "<TD><A href='delete.php?userID=", $row['userID'], "'>삭제</A></TD>";
+	echo"</TR>";
+}
+
+// 테이블 닫기
+echo "</TABLE>";
+
+echo "<BR> <A href='main.html'> <-- 초기화면 </A>";
+mysqli_close($con);
+?>
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+insert.php 파일 생성
+
+<HTML>
+<HEAD>
+	<META http-equiv="content-type" content="text/html; charset=utf-8">
+</HEAD>
+<BODY>
+<H1> 신규 회원 입력 </H1>
+// post 방식으로 값 전달
+// action : insert_result.php 으로 이동
+<FORM method="post" action="insert_result.php">
+	아이디 : <INPUT type="text" name="userID"><BR>
+	이름 : <INPUT type="text" name="name"><BR>
+	출생년도: <INPUT type="text" name="birthYear"><BR>
+	지역 : <INPUT type="text" name="addr"><BR>
+	휴대폰 국번 : <INPUT type="text" name="mobile1"><BR>
+	휴대폰 전화번호 : <INPUT type="text" name="mobile2"><BR>
+	신장 : <INPUT type="text" name="height"><BR>
+	<BR><BR>
+	<INPUT type="submit" value="회원 입력">
+</FORM>
+</BODY>
+</HTML>
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+insert_result.php 파일 생성
+
+<?php
+$con = mysqli_connect("localhost", "root", "1234", "sqlDB");
+
+// 포스트로 전송된 데이터를 변수에 저장
+$userID = $_POST["userID"];
+$name = $_POST["name"];
+$birthYear = $_POST["birthYear"];
+$addr = $_POST["addr"];
+$mobile1 = $_POST["mobile1"];
+$mobile2 = $_POST["mobile2"];
+$height = $_POST["height"];
+
+// 현재 날짜를 변수에 저장
+$mDate = date("Y-m-j");
+
+// 쿼리 입력
+// php 에선 문자열을 .문자. 로 합침
+$sql = "INSERT INTO userTbl VALUES('".$userID."',
+                                   '".$name."',
+								   '".$birthYear."',
+								   '".$addr."',
+								   '".$mobile1."',
+								   '".$mobile2."',
+								   '".$height."',
+								   '".$mDate."')";
+// 쿼리 실행
+$ret = mysqli_query($con, $sql);
+
+echo "<H1> 신규 회원 입력 결과</H1>"
+if ($ret)
+{
+	echo "데이터가 성공적으로 입력됨.";
+}
+else
+{
+	echo "데이터 입력 실패!!!<BR>"
+	echo "실패 원인 : ".mysql_error($con);
+}
+mysqli_close($con);
+echo "<BR> <A href='main.html'> <-- 초기화면</A>";
+?>
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
+update.php
+
+<?php
+$con = mysqli_connect("localhost", "root", "1234", "sqlDB");
+
+// userID 를 GET 방식으로 받아 userID 와 같은 회원을 찾음
+$sql = "SELECT * FROM userTbl WHERE userID='".$_GET['userID']."'";
+
+// 쿼리 실행
+$ret = mysqli_query($con, $sql);
+
+// 실행 성공이면
+if ($ret)
+{
+	$count = mysqli_num_rows($ret);
+	
+	// 레코드 값이 하나도 없으면
+	if ($count == 0)
+	{
+		echo $_GET['userID']." 아이디의 회원이 없음!!!<BR>";
+		echo "<BR><A href='main.html'> <-- 초기화면</A>";
+		exit();
+	}
+}
+else
+{
+	echo "데이터 조회 실패!!!<BR>";
+	echo "실패 원인 : ".mysqli_error($con);
+	echo "<BR><A href='main.html'> <-- 초기화면</A>";
+	exit();
+}
+
+$row = mysqli_fetch_array($ret);
+
+// 레코드 읽어온것 의 하나 하나를 변수에 저장
+$userID	= $row['userID'];
+$name	= $row['name'];
+$birthYear	= $row['birthYear'];
+$addr	= $row['addr'];
+$mobile1	= $row['mobile1'];
+$mobile2	= $row['mobile2'];
+$height	= $row['height'];
+$mDate	= $row['mDate'];
+?>
+
+<HTML>
+<HEAD>
+	<META http-equiv="content-type" content="text/html; charset=utf-8">
+</HEAD>
+<BODY>
+<H1> 회원 정보 수정 </H1>
+<FORM method="post" action="update_result.php">
+	// value="<?=$userID ?>" : $userID 의 값을 텍스트 박스에 보여줌
+	아이디 : <INPUT type="text" name="userID" value="<?=$userID ?>" READONLY><BR>
+	이름 : <INPUT type="text" name="name"value="<?=$name ?>"><BR>
+	출생년도: <INPUT type="text" name="birthYear"value="<?=$birthYear ?>"><BR>
+	지역 : <INPUT type="text" name="addr"value="<?=$addr ?>"><BR>
+	휴대폰 국번 : <INPUT type="text" name="mobile1"value="<?=$mobile1 ?>"><BR>
+	휴대폰 전화번호 : <INPUT type="text" name="mobile2"value="<?=$mobile2 ?>"><BR>
+	신장 : <INPUT type="text" name="height" value="<?=$height ?>"><BR>
+	날짜 : <INPUT type="text" name="mDate" value="<?=$mDate ?>" READONLY><BR>
+	<BR><BR>
+	<INPUT type="submit" value="정보 수정">
+</FORM>
+</BODY>
+</HTML>
+
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////
+
+update_result.php
+
+<?php
+$con = mysqli_connect("localhost", "root", "1234", "sqlDB");
+
+$userID = $_POST["userID"];
+$name = $_POST["name"];
+$birthYear = $_POST["birthYear"];
+$addr = $_POST["addr"];
+$mobile1 = $_POST["mobile1"];
+$mobile2 = $_POST["mobile2"];
+$height = $_POST["height"];
+$mDate = $_POST["mDate"];
+
+
+$sql = "UPDATE userTbl SET name='".$name."',
+								 birthYear='".$birthYear."',
+								 addr='".$addr."',
+								 mobile1='".$mobile1."',
+								 mobile2='".$mobile2."',
+								 height='".$height."'
+								 WHERE userID='".$userID."'";
+								   
+$ret = mysqli_query($con, $sql);
+
+echo "<H1> 회원 정보 수정 결과</H1>";
+if ($ret)
+{
+	echo "데이터가 성공적으로 수정됨.";
+}
+else
+{
+	echo "데이터 수정 실패!!!<BR>";
+	echo "실패 원인 : ".mysql_error($con);
+}
+mysqli_close($con);
+echo "<BR> <A href='main.html'> <-- 초기화면</A>";
+?>
+
+//////////////////////////////////////////////////////////////////////////////////////
+
+delete.php 파일생성
+
+<?php
+$con = mysqli_connect("localhost", "root", "1234", "sqlDB");
+
+$sql = "SELECT * FROM userTbl WHERE userID = '".$_GET['userID']."' ";
+
+$ret = mysqli_query($con, $sql);
+if ($ret)
+{
+	$count = mysqli_num_rows($ret);
+	if ($count == 0)
+	{
+		echo $_GET['userID']." 아이디의 회원이 없음!!!<BR>";
+		echo "<BR> <A href='main.html'> <-- 초기 화면</A>";
+		exit();
+	}
+}
+else
+{
+	echo "데이터 조회실패!!!<BR>";
+	echo "실패 원인 : ".mysqli_error($con);
+	echo "<BR> <A href='main.html'> <--초기 화면</A>";
+	exit();
+}
+
+$row = mysqli_fetch_array($ret);
+
+$userID = $row['userID'];
+$name = $row['name'];
+?>
+
+<HTML>
+<HEAD>
+	<META http-equiv = "content-type" content = "text/html; charset=utf-8">
+</HEAD>
+<BODY>
+	<H1> 회원 삭제 </H1>
+<FORM method = "post" action = "delete_result.php">
+	아이디 : <INPUT type = "text" name = "userID" value = "<?=$userID ?>" READONLY><BR>
+	이름 : <INPUT type = "text" name = "name" value = "<?=$name ?>" READONLY><BR>
+	<BR><BR>
+	위 회원을 삭제하겠습니까?
+	<INPUT type = "submit" value = "회원 삭제">
+</FORM>
+</BODY>
+</HTML>
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+delete_result.php
+
+<?php
+$con = mysqli_connect("localhost", "root", "1234", "sqlDB");
+
+$userID = $_POST["userID"];
+
+$sql = "DELETE FROM userTbl WHERE userID = '".$userID."' ";
+
+$ret = mysqli_query($con, $sql);
+
+echo " <H1> 회원 삭제 결과 </H1>";
+
+if ($ret)
+{
+	echo $userID ." 회원이 성공적으로 삭제됨.";
+}
+else
+{
+	echo "데이터 삭제 실패!!!<BR>";
+	echo "실패 원인 : " .mysqli_error($con);
+}
+mysqli_close($con);
+
+echo "<BR><BR> <A href='main.html'> <--초기화면</A>";
+?>
