@@ -84,8 +84,6 @@ public class PlayerMove : NetworkBehaviour
             // FixedUpdateNetwork() 는 FixedDeltaTime 이 아닌 Runner.DeltaTime 을 사용
             netCC.Move(data.dir * moveSpeed * Runner.DeltaTime);
 
-            Debug.Log(data.dir);
-
             if (data.Buttons.WasPressed(_buttonsPrevious, PlayerButtons.Jump))
             {// data 현재 버튼이 Jump 번째 이전 버튼 과 다르면
                 netCC.Jump(); // 공중에 있으면 점프 안되는 것 도 구현 되어있음

@@ -1,0 +1,131 @@
+FPS 게임 로그인 구현
+
+하이디SQL > localhost 우클릭 > 새로만들기 > 데이터 베이스
+> 이름 : fps_game, 타입 : utf8mb4_general_ci
+
+fps_game 우클릭 > 새로만들기 > 테이블 > 이름 : user, 코멘트 : 유저 정보 테이블
+
+코멘트 아래 추가 버튼으로 컬럼 추가
+
+이름 id 데이터유형 int 길이 11 우클릭 > 새인덱스 생성 Primary Key 기본값 클릭> AUTO INCREMENT
+이름 username 데이터유형 VARCHAR 길이 20 NULL 허용 X
+이름 password 데이터유형 CHAR 길이 50 NULL 허용 X
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+쿼리 작성
+-- user 테이블 이름 (칼럼 username, 칼럼 password) 
+INSERT INTO user(username, password)
+-- PASSWORD() 는 암호화 하는 함수(해쉬알고리즘으로 해쉬값 만들기)
+VALUES ('user1', PASSWORD('1234'));
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+폴더 생성 후 login.php 파일 생성
+
+<?php
+// login.php
+$servername = "localhost";
+$username = "root";
+$password = "1234";
+$dbname = "fps_game";
+
+$user_username = $_POST["usernamePost"];
+$user_password = $_POST["passwordPost"];
+
+// 다른 방식의 데이터베이스 접속 방식
+$conn = new mysqli($servername, $username, $password, $dbname);
+if ($conn -> connect_error)
+{
+	echo "Failed to connect to MySQL : " + $mysqli -> coonect_error;
+	exit():
+}
+
+// 사용자가 입력한 유저이름이 있는지
+$sql = "SELECT password FROM user WHERE username = '".$user_username."' ";
+$result = mysqli_query($conn, $sql);
+
+// 사용자가 입력한 유저이름과 같은 이름의 레코드가 있는지 확인
+if (mysqli_num_rows($result) > 0)
+{
+	// Array 는 인덱스 번호와 컬럼 이름 둘 다 되지만
+	// assoc 은 컬럼 이름만 됨(성능상 아주 조금 더 좋음, 둘다 큰 차이 없음)
+	if($row = mysqli_fetch_assoc($result))
+	{
+		// get_enc_str : 직접만든 메소드
+		// get_enc_str : 해당하는 데이터 베이스 의 암호화 알고리즘을 이용해서 해시코드 비교
+		// get_enc_str(접속한 데이터베이스, 암호화 할 문자열)
+		if ($row['password'] == get_enc_str($conn, $user_password))
+			echo "login success";
+		else
+			echo "password incorrect";
+	}
+}
+else
+{
+	echo "user not found";
+}
+return;
+
+function get_enc_str($conn, $str)
+{
+	// 결과를 enc_str 라는 이름으로 받는 쿼리문 작성
+	$sql = "SELECT PASSWORD('".$str."') AS 'enc_str'";
+	
+	// 쿼리문을 $conn 이 접속한 데이터베이스 에서 실행
+	$result = mysqli_query($conn, $sql);
+	// 쿼리문 의 조건에 맞는 레코드 를 저장
+	$row = mysqli_fetch_assoc($result);
+	
+	// 레코드 의 변환된 문자열을 리턴
+	return $row['enc_str'];
+}
+?>
+
+
+/////////////////////////////////////////////////////////////////////////////////
+
+FPS Game Multiplay 열기
+
+LoginManager 스크립트
+
+using 추가
+
+using System.Collections;
+using UnityEngine.Networking;
+
+
+메소드 수정
+
+	// 로그인 함수
+    public void CheckUserData()
+    {
+        // 만일 입력 검사에 문제가 있으면 함수를 종료
+        if (!CheckInput(id.text, password.text))
+            return;
+
+        StartCoroutine(LoginDataPost(id.text, password.text));
+    }
+	
+	
+메소드 생성
+	
+	 IEnumerator LoginDataPost(string id, string password)
+    {
+        string url = "http://127.0.0.1/fps_game/login.php";
+        WWWForm form = new WWWForm();
+        form.AddField("usernamePost", id);
+        form.AddField("passwordPost", password);
+        using (UnityWebRequest www = UnityWebRequest.Post(url, form))
+        {
+            yield return www.SendWebRequest();
+            if (www.error == null)
+            {
+                Debug.Log(www.downloadHandler.text);
+            }
+            else
+            {
+                Debug.Log("error");
+            }
+        }
+    }

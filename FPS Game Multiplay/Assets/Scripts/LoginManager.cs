@@ -2,6 +2,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using Fusion;
+using System.Collections;
+using UnityEngine.Networking;
 
 public class LoginManager : MonoBehaviour
 {
@@ -116,7 +118,10 @@ public class LoginManager : MonoBehaviour
         if (!CheckInput(id.text, password.text))
             return;
 
-        // 사용자가 입력한 아이디를 키로 사용해 시스템에 저장된 값을 불러옴
+        StartCoroutine(LoginDataPost(id.text, password.text));
+
+
+/*        // 사용자가 입력한 아이디를 키로 사용해 시스템에 저장된 값을 불러옴
         string pass = PlayerPrefs.GetString(id.text);
 
         // 만일, 사용자가 입력한 패스워드와 시스템에서 불러온 값을 비교해서 동일하다면
@@ -130,6 +135,50 @@ public class LoginManager : MonoBehaviour
         else
         {
             notify.text = "입력하신 아이디와 패스워드가 일치하지 않습니다.";
+        }*/
+    }
+
+    IEnumerator LoginDataPost(string id, string password)
+    {
+        // url 주소 저장할 변수 생성(아이피 혹은 도메인 주소/경로/파일)
+        string url = "http://127.0.0.1/fps_game/login.php";
+
+        WWWForm form = new WWWForm();
+        // form 객체에 애드필드 해서 이름과 밸류값을 전달
+        form.AddField("usernamePost", id);
+        form.AddField("passwordPost", password);
+
+        // using : 안에서 생성된 객체가 사라지면 Dispos(파일닫기) 가 호출됨
+        // UnityWebRequest.Post(url : 접속 주소, form : 보낼 데이터)
+        using (UnityWebRequest www = UnityWebRequest.Post(url, form))
+        {
+            // 응답이 올때까지 코드 정지
+            yield return www.SendWebRequest();
+            if (www.error == null)
+            {
+                // downloadHandler.text : 인터넷 클라이언트 의 보여지는 화면(php 의 echo 같은거)
+                Debug.Log(www.downloadHandler.text);
+
+                switch (www.downloadHandler.text)
+                {
+                    case "login success":
+                        StartSharedSession();
+                        break;
+                    case "password incorrect":
+                        notify.text = "잘못된 비밀번호";
+                        break;
+                    case "user not found":
+                        notify.text = "사용자 없음";
+                        break;
+                    default:
+                        break;
+                }
+            }
+            else
+            {
+                Debug.Log("error");
+                notify.text = "로그인 실패";
+            }
         }
     }
 
