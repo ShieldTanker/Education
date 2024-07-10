@@ -5,6 +5,7 @@ using Fusion;
 using Fusion.Sockets;
 using System;
 using UnityEngine.SceneManagement;
+using UnityEngine.Networking;
 
 public class OnServerDisconnected : MonoBehaviour, INetworkRunnerCallbacks
 {

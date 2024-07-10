@@ -4,6 +4,7 @@ using UnityEngine.SceneManagement;
 using Fusion;
 using System.Collections;
 using UnityEngine.Networking;
+using System;
 
 public class LoginManager : MonoBehaviour
 {
@@ -23,6 +24,8 @@ public class LoginManager : MonoBehaviour
 
     // 검사 텍스트 변수
     public Text notify;
+
+    public Text userList;
 
     private void Start()
     {
@@ -97,7 +100,9 @@ public class LoginManager : MonoBehaviour
         if (!CheckInput(id.text, password.text))
             return;
 
-        // 만일 시스템에 저장돼 있는 아이디가 존재하지 않는다면
+        StartCoroutine(JoinDataPost(id.text, password.text));
+
+/*        // 만일 시스템에 저장돼 있는 아이디가 존재하지 않는다면
         if (!PlayerPrefs.HasKey(id.text))
         {
             // 사용자의 아이디는 키(key)로 패스워드를 값(value)으로 설정해 저장
@@ -108,6 +113,44 @@ public class LoginManager : MonoBehaviour
         else
         {
             notify.text = "이미 존재하는 아이디입니다.";
+        }*/
+    }
+
+    IEnumerator JoinDataPost(string id, string password)
+    {
+        string url = "http://127.0.0.1/fps_game/join.php";
+
+        WWWForm form = new WWWForm();
+        form.AddField("usernamePost", id);
+        form.AddField("passwordPost", password);
+        // 객체 생성 후 Post 값 넣기
+        using(UnityWebRequest www = UnityWebRequest.Post(url, form))
+        {
+            // 객체의 값으로 수신 요청
+            yield return www.SendWebRequest();
+            if (www.error == null)
+            {
+                // 에러가 없으면
+                switch (www.downloadHandler.text)
+                {
+                    case "success":
+                        notify.text = "아이디 생성이 완료 되었습니다";
+                        break;
+                    case "already exist":
+                        notify.text = "이미 존재하는 아이디 입니다.";
+                        break;
+                    case "fail":
+                        notify.text = "아이디 생성이 실패 했습니다.";
+                        break;
+                    default:
+                        notify.text = "알 수 없는 오류";
+                        break;
+                }
+            }
+            else
+            {
+                notify.text = "로그인 서버 접속 실패";
+            }
         }
     }
 
@@ -147,6 +190,7 @@ public class LoginManager : MonoBehaviour
         // form 객체에 애드필드 해서 이름과 밸류값을 전달
         form.AddField("usernamePost", id);
         form.AddField("passwordPost", password);
+        form.AddField("datePost", DateTime.Now.ToString("yyyy-MM-dd HH:mm"));
 
         // using : 안에서 생성된 객체가 사라지면 Dispos(파일닫기) 가 호출됨
         // UnityWebRequest.Post(url : 접속 주소, form : 보낼 데이터)
@@ -197,4 +241,49 @@ public class LoginManager : MonoBehaviour
             return true;
         }
     }
+
+    public void UserList()
+    {
+        StartCoroutine(UserListPost());
+    }
+
+    IEnumerator UserListPost()
+    {
+        string url = "http://127.0.0.1/fps_game/user_list.php";
+        WWWForm form = new WWWForm();
+        // 데이터 추가없이 서버 접속
+        using (UnityWebRequest www = UnityWebRequest.Post(url, form))
+        {
+            yield return www.SendWebRequest();
+            // 에러가 없으면
+            if(www.error == null)
+            {
+                // 유니티 에서 사용되는 json 문법 : {\"Items(Users클래스에 있는 변수 이름과 같게)\" + 웹에서 보이는 json 코드 + "}"
+                //  "{\"Items\":" + [{"id":"1","username":"user1"},{"id":"2","username":"user2"},{"id":"3","username":"user3"}] + "}"
+                string jsonStr = "{\"Items\":" + www.downloadHandler.text + "}";
+                
+                // json 문법을 객체로 바꿔줌
+                Users users = JsonUtility.FromJson<Users>(jsonStr);
+
+                string userStr = "";
+
+                foreach (User user in users.Items)
+                {
+                    userStr += $"ID : {user.id}, Name : {user.username}\n";
+                }
+                userList.text = userStr;
+            }
+        }
+    }
+}
+// 따로 파일 만드는게 좋음(편의상 여기서 만듬)
+[System.Serializable]
+public class User
+{
+    public int id;
+    public string username;
+}
+public class Users
+{
+    public User[] Items;
 }

@@ -129,3 +129,239 @@ using UnityEngine.Networking;
             }
         }
     }
+
+
+///////////////////////////////////////////////////////////////////////////////////
+
+새로 생성 만들기
+
+join.php 생성
+
+<?php
+// join.php
+// 서버 접속용 데이터
+$servername = "localhost";
+$username = "root";
+$password = "1234";
+$dbname = "fps_game";
+
+$user_username = $_POST["usernamePost"];
+$user_password = $_POST["passwordPost"];
+
+$conn = new mysqli ($servername, $username, $password, $dbname);
+
+if($conn -> connect_errno)
+{
+	echo "Failed to connect to MySQL : " + Smysqli -> connect_error;
+	exit();
+}
+
+// 새로생성시 입력한 아이디가 있는지 확인
+$sql = "SELECT id FROM user WHERE username = '".$user_username."'";
+// 쿼리 실행
+$result = mysqli_query($conn, $sql);
+
+// 레코드가 있으면 아이디가 있음으로 리턴
+if (mysqli_num_rows($result) > 0)
+{
+	echo "already exist";
+	return;
+}
+
+$sql = "INSERT INTO user(username, password) 
+		// 테이블에 유저이름 과 암호화된 패스워드 값 넣기
+		VALUES ('".$user_username."', PASSWORD('".$user_password."')";
+
+$result = mysqli_query($conn, $sql);
+
+// == (php 에서 자동으로 형변환 해서 비교,"5" == 5)
+// === (타입이 같은지부터 확인하고 값도 같은지 확인)
+if ($result === true)
+{
+	echo "success";
+}
+else
+{
+	echo "fail";
+}
+?>
+
+
+LoginManager 스크립트 수정
+
+메소드 수정
+
+    public void SaveUserData()
+    {
+        // 만일 입력 검사에 문제가 있으면 함수를 종료
+        if (!CheckInput(id.text, password.text))
+            return;
+
+        StartCoroutine(JoinDataPost(id.text, password.text));
+	}
+
+    IEnumerator JoinDataPost(string id, string password)
+    {
+        string url = "http://127.0.0.1/fps_game/join.php";
+
+        WWWForm form = new WWWForm();
+        form.AddField("usernamePost", id);
+        form.AddField("passwordPost", password);
+        // 객체 생성 후 Post 값 넣기
+        using(UnityWebRequest www = UnityWebRequest.Post(url, form))
+        {
+            // 객체의 값으로 수신 요청
+            yield return www.SendWebRequest();
+            if (www.error == null)
+            {
+                // 에러가 없으면
+                switch (www.downloadHandler.text)
+                {
+                    case "success":
+                        notify.text = "아이디 생성이 완료 되었습니다";
+                        break;
+                    case "already exist":
+                        notify.text = "이미 존재하는 아이디 입니다.";
+                        break;
+                    case "fail":
+                        notify.text = "아이디 생성이 실패 했습니다.";
+                        break;
+                    default:
+                        notify.text = "알 수 없는 오류";
+                        break;
+                }
+            }
+            else
+            {
+                notify.text = "로그인 서버 접속 실패";
+            }
+        }
+    }
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+데이터 베이스에 있는 사용자 목록을 화면에 표시하기 (json 사용)
+
+<?php
+// user_list.php
+$servername = "localhost";
+$username = "root";
+$password = "1234";
+$dbname = "fps_game";
+
+$conn = new mysqli ($servername, $username, $password, $dbname);
+
+if($conn -> connect_errno)
+{
+	echo "Failed to connect to MySQL : " + Smysqli -> connect_error;
+	exit();
+}
+
+// user 테이블에서 id 와 username 검색
+$sql = "SELECT id, username FROM user";
+$result = mysqli_query($conn, $sql);
+
+// 검색 결과가 0 초과 일시
+if(mysqli_num_rows($result) > 0)
+{
+//  qls배열 생성
+	$users = array();
+	// 쿼리 결과를 하나씩 읽어 더이상 읽어올수 없을때 까지 실행
+	while ($row = mysqli_fetch_assoc($result))
+	{
+		// 유저 배열안에 배열 추가 ($row['id'] 읽은 레코드 한줄의 id(컬럼이름))
+		// users[] 안에 인덱스 번호가 없으면 차례차례로 값이 들어감
+		$users[] = array('id' => $row['id'], 'username' => $row['username']);
+	}
+	
+	// $users_json_string 라는 변수 선언 
+	// $users 배열을 json_encode() 함수로 json 파일로 만들고 변수에 저장
+	$users_json_string = json_encode($users);
+	echo $users_json_string;
+}
+else
+{
+	echo "no user";
+}
+?>
+
+결과
+[{"id":"1","username":"user1"},{"id":"2","username":"user2"},{"id":"3","username":"user3"}]
+
+json 문법
+[] 전체 데이터 : [{한개의 데이터},{한개의 데이터},{한개의 데이터}]
+{} 한개의 데이터 : {"변수1":"변수1 의 값","변수2":"변수2 의 값"}
+
+
+유니티 수정
+
+Button_Login 복사 후 이름 Button_UserList
+위치값 0 -350 0
+200 60
+
+텍스트 사용자 목록
+
+
+Text_LoginCheck 복사 후 이름 Text_UserList
+위치값 0 -480 0
+500 150
+
+텍스트 없음
+
+
+
+LoginManager 스크립트 수정
+
+변수 추가
+	public Text userList;
+	
+클래스 추가
+
+// 따로 파일 만드는게 좋음(편의상 여기서 만듬)
+[System.Serializable]
+public class User
+{
+    public int id;
+    public string username;
+}
+public class Users
+{
+	// User 클래스를 담을수 있는 배열을 만듬
+    public User[] Items;
+}
+
+public void UserList()
+    {
+        StartCoroutine(UserListPost());
+    }
+
+    IEnumerator UserListPost()
+    {
+        string url = "http://127.0.0.1/fps_game/user_list.php";
+        WWWForm form = new WWWForm();
+        
+		// 데이터 추가없이 서버 접속
+        using (UnityWebRequest www = UnityWebRequest.Post(url, form))
+        {
+            yield return www.SendWebRequest();
+            
+			// 에러가 없으면
+            if(www.error == null)
+            {
+                // 유니티 에서 사용되는 json 문법 : {\"Items(Users클래스에 있는 변수 이름과 같게)\" + 웹에서 보이는 json 코드 + "}"
+                string jsonStr = "{\"Items\":" + www.downloadHandler.text + "}";
+                
+                // json 문법을 객체로 바꿔줌
+                Users users = JsonUtility.FromJson<Users>(jsonStr);
+
+                string userStr = "";
+
+                foreach (User user in users.Items)
+                {
+                    userStr += $"ID : {user.id}, Name : {user.username}\n";
+                }
+                userList.text = userStr;
+            }
+        }
+    }

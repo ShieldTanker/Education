@@ -34,6 +34,7 @@ public class LocalInputPoller : MonoBehaviour, INetworkRunnerCallbacks
         Vector3 dir = new Vector3(h, 0, v);
         dir = dir.normalized;  // 대각선 입력을 정규화
         dir = Camera.main.transform.TransformDirection(dir);  // 메인카메라가 바라보는 방향을 기준으로 새로 계산
+        dir = new Vector3(dir.x, 0, dir.z);
 
         localInput.dir = dir; // 구조체에 dir 값 넣기
 

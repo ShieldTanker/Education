@@ -1,6 +1,8 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Networking;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using Fusion;
@@ -62,9 +64,19 @@ public class GameManager : NetworkBehaviour
     // 플레이어 로테이트 변수
     public PlayerRotate pr;
 
+    //마지막 접속 시간
+    public Text lastDateTxt;
+    string lastDate;
+    PlayerData pData;
+    string userID;
+
     // Start() 를 Spawned() 로 바꿈
     public override void Spawned()
     {
+        pData = FindObjectOfType<PlayerData>();
+        userID = pData.UserId;
+        StartCoroutine(ShowLastDate(userID));
+
         // 초기 게임 상태를 준비 상태로 설정
         gState = GameState.Ready;
 
@@ -178,5 +190,26 @@ public class GameManager : NetworkBehaviour
     public void RemovePlayer(GameObject obj)
     {
         players.Remove(obj);
+    }
+
+    IEnumerator ShowLastDate(string id)
+    {
+        string url = "http://localhost/fps_game/lastdate.php";
+        WWWForm form = new WWWForm();
+        form.AddField("usernamePost", id);
+
+        using (UnityWebRequest www = UnityWebRequest.Post(url, form))
+        {
+            yield return www.SendWebRequest();
+            if (www.error == null)
+            {
+                lastDate = www.downloadHandler.text;
+                lastDateTxt.text = "마지막 접속 시간 : " + lastDate;
+            }
+            else
+            {
+                Debug.Log("에러");
+            }
+        }
     }
 }
