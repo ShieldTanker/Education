@@ -250,7 +250,7 @@ $username = "root";
 $password = "1234";
 $dbname = "fps_game";
 
-$conn = new mysqli ($servername, $username, $password, $dbname);
+$conn = new mysqli($servername, $username, $password, $dbname);
 
 if($conn -> connect_errno)
 {
@@ -265,18 +265,20 @@ $result = mysqli_query($conn, $sql);
 // 검색 결과가 0 초과 일시
 if(mysqli_num_rows($result) > 0)
 {
-//  qls배열 생성
+//  sql배열 생성
 	$users = array();
 	// 쿼리 결과를 하나씩 읽어 더이상 읽어올수 없을때 까지 실행
 	while ($row = mysqli_fetch_assoc($result))
 	{
 		// 유저 배열안에 배열 추가 ($row['id'] 읽은 레코드 한줄의 id(컬럼이름))
 		// users[] 안에 인덱스 번호가 없으면 차례차례로 값이 들어감
+	
 		$users[] = array('id' => $row['id'], 'username' => $row['username']);
 	}
 	
 	// $users_json_string 라는 변수 선언 
 	// $users 배열을 json_encode() 함수로 json 파일로 만들고 변수에 저장
+	
 	$users_json_string = json_encode($users);
 	echo $users_json_string;
 }

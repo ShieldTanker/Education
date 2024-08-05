@@ -1,0 +1,73 @@
+모듈 설치
+
+Android Build Support 설치
+
+3D Core 로 프로젝트 생성
+
+----------------------------------------------------------------------------------------------------------------------
+
+ 환경 설정 변경
+Build Settings -> Android 플랫폼 선택 -> Switch Platform
+
+Player Settings -> Others -> Color Space : Linear
+-> Auto Graphics API 체크 해제
+
+->Identification -> Override Default Package Name 체크
+-> com(회사).MyVR(회사 이름).OculusQuestShootingVR(게임이름)
+
+-> Configuration -> Scripting Backend : IL2CPP , ARM64 체크
+
+XR Plug-in Management -> Install -> Oculus 체크
+
+-----------------------------------------------------------------------------------------------------------------------
+
+Asset Store 에서 Oculus Integration (Deprecated) 설치 -> Don't Send
+-> Restart -> No Don't Ask again -> Upgrade -> Restart
+
+Asset Store -> Free Low Poly - Raft on the desert 설치
+
+Asset Store -> Sci-Fi Gun 설치
+
+-----------------------------------------------------------------------------------------------------------------------
+
+raft on the desert 에셋의 Desert 씬을 Scenes 폴더에 넣고 Main 으로 이름 변경
+Main 씬 로드
+
+빈 오브젝트 생성 후 Map 으로 설정 > 모든 오프젝트 Map 안에 넣기
+
+VR 로 쓸것이기에 Camera 오브젝트(PHI_Camera, Camera_1) 비활성화
+
+-----------------------------------------------------------------------------------------------------------------------
+
+프로젝트뷰 검색 -> ovrplayercon -> OVRPlayerController 프리팹 가져오기
+
+ OVRPlayerController 의 자식오브젝트 OVRCameraRig 선택
+-> CharacterCameraConstraint 추가 -> Camera Rig 칸에 OVRCameraRig 참조
+
+OVRCameraRig -> OVRManager스크립트 -> Tracking
+-> Tracking Origin Type : Floor Level
+
+프로젝트뷰 CustomHandLeft, CustomHandRight 검색
+OVRCameraRig 의 자식 오브젝트 TrackingSpace -> LeftControllerAnchor 에 추가
+OVRCameraRig 의 자식 오브젝트 TrackingSpace -> RightControllerAnchor 에 추가
+
+CustomHandLeft -> Parent Transform 을 LeftControllerAnchor ->
+Player 를 OVRPlayerController 를 참조
+
+CustomHandRight 도 마찬가지로 참조
+
+-----------------------------------------------------------------------------------------------------------------------
+
+ 중간에 빌드에서 테스트 해보기
+Meta Quest 개발자 계정 필요 -> https://developer.oculus.com/ 들어가기
+
+계정 생성 후 프로필 -> 단체 없으면 생성 -> MyApp -> Create
+-> 이름 설정후 Oculus Quest (스토아) 로 생성
+
+왼쪽 API -> 앱ID 복사
+
+-----------------------------------------------------------------------------------------------------------------------
+
+ 유니티 상단 Oculus > Platform > Meta Quest/2/Pro 부분에 붙혀넣기
+Build Settings -> Add Open Scenes -> Texture Compression : ASTC
+
