@@ -28,6 +28,7 @@ Asset Store -> Free Low Poly - Raft on the desert 설치
 
 Asset Store -> Sci-Fi Gun 설치
 
+Asset Store -> Modern Guns 설치
 -----------------------------------------------------------------------------------------------------------------------
 
 raft on the desert 에셋의 Desert 씬을 Scenes 폴더에 넣고 Main 으로 이름 변경
@@ -71,3 +72,255 @@ Meta Quest 개발자 계정 필요 -> https://developer.oculus.com/ 들어가기
  유니티 상단 Oculus > Platform > Meta Quest/2/Pro 부분에 붙혀넣기
 Build Settings -> Add Open Scenes -> Texture Compression : ASTC
 
+-----------------------------------------------------------------------------------------------------------------------
+
+권총 두개 생성 
+첫번째 총 위치값 -4.5, 1.8, -0.5
+두번째 총 위치값 -4.5, 1.8, 0
+
+총 오브젝트에 OVR Grabbable, Simple Shoot 스크립트 추가
+RigidBody 도 추가
+
+총오브젝트 의 자식 오브젝트 로 빈오브젝트 추가 > Colliders
+Colliders 의 자식오브젝트로 빈오브젝트추가 > Collider1
+
+Collider1 에 BoxCollider 추가
+위치값 0, 0.09, 0.08
+스케일 0.04, 0.05, 0.23
+
+Collider1 복제 Collider2 로 변경
+위치값 0, 0.023, 0.01
+로테이션 20, 0, 0
+스케일 0.04, 0.11, 0.06
+
+-----------------------------------------------------------------------------------------------------------------------
+
+총 오브젝트의 OVR Grabbable 컴포넌트 하단 Grap Points 에 손으로 잡는 데 필요한
+콜라이더를 넣으면 됨, Collider1, Collider2 넣기
+
+바위에 콜라이더가 없음으로 씬뷰에서 바위 클릭
+-> 바위의 부모 오브젝트 클릭후 Mesh Collider 추가 (메쉬 모양대로 콜라이더 생성)
+-> Mesh 에 검색칸 누른뒤 gray_01d_lod0 검색후 적용
+
+------------------------------------------------------------------------------------------------------------------------
+
+총 오브젝트에 자식오브젝트 Crosshair 추가 
+-> Crosshair 자식오브젝트 로 3D 오브젝트 Quad 추가
+-> 프로젝트뷰 검색 trianglecu -> Quad 에 넣기 둘중 하나 넣기
+-> 인스펙터 하단 Shader 를 Unlit > Tranparent Texture 로 변경
+
+위치값 0, 0, 0.04
+로테이션 0, 180, 0
+스케일 전부 0.1
+
+-------------------------------------------------------------------------------------------------------------------------
+
+ 손으로 잡았을때 회전값 위치값 보정
+빈오브젝트 생성 -> HandgunOffset
+
+위치값 0.03, 0, -0.08
+로테이션 0, 0, 90
+
+총 오브젝트의 OVR Grabbable 컴포넌트 -> Snap Position, Snap Orientation 활성화
+Snap Offset 에 HandgunOffset 참조
+
+왼손은 잡을때 반대로 잡힘
+오프셋 하나 더 줘도 되지만 왼손으로 잡을때 회전값을 주는 방법도 있음
+LeftControllerAnchor > CustomHandLeft > Offset > gripTrans 회전값 0, 0, 180
+
+-------------------------------------------------------------------------------------------------------------------------
+
+ 총 발사 수정
+SimpleShoot 스크립트 열기
+
+함수 추가
+    public void TriggerShoot()
+    {
+        gunAnimator.SetTrigger("Fire");
+		Shoot();
+		CasingRelease();
+    }
+
+--------------------------------------------------------------------------------------------------------------------------
+
+ 키 입력 확인하기 위해
+OVRGrabber 스크립트 열기
+
+함수 추가
+    public OVRInput.Controller GetController()
+    {
+        return m_controller;
+    }
+
+----------------------------------------------------------------------------------------------------------------------------
+
+ShootIfGrabbed 스크립트 생성
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using TMPro;
+
+public class ShootIfGrabbed : MonoBehaviour
+{
+    private SimpleShoot simpleShoot;
+    private OVRGrabbable ovrGrabbable;
+
+    // PrimaryIndexTrigger 로 설정
+    public OVRInput.Button shootingButton;
+
+    public int remainBullets;
+    public TMP_Text remainBulletsText;
+
+    public AudioSource audioSource;
+    public AudioClip shootingAudio;
+
+    private void Start()
+    {
+        simpleShoot = GetComponent<SimpleShoot>();
+        ovrGrabbable = GetComponent<OVRGrabbable>();
+        audioSource = GetComponent<AudioSource>();
+
+        remainBulletsText.text = remainBullets.ToString();
+
+    }
+
+    private void Update()
+    {
+        // 총을 잡고있는지 확인
+        if (ovrGrabbable.isGrabbed &&
+            // 키를 누르는순간 잡은 오브젝트의 객체를 가져옴
+            OVRInput.GetDown(shootingButton, ovrGrabbable.grabbedBy.GetController()))
+        {
+            if (remainBullets > 0)
+            {
+                audioSource.PlayOneShot(shootingAudio);
+                simpleShoot.TriggerShoot();
+
+                --remainBullets;
+                remainBulletsText.text = remainBullets.ToString();
+            }
+        }
+    }
+}
+
+
+
+----------------------------------------------------------------------------------------------------------------------------
+
+ 총 오브젝트에 Canvas 생성 WorldSpace 로 설정
+-0.2, 0, 0.2
+300, 150
+
+Canvas 자식오브젝트로 Text(TMP)
+스트래치 스트래치 전부0 으로
+Text : Bullet
+
+----------------------------------------------------------------------------------------------------------------------------
+ 
+ 총 오브젝트에 Audio Source 컴포넌트 추가
+Audio Clip 은 코드로 할것임
+Spartial Blend 값 1 로 설정(입체 음향)
+
+
+ 총 오브젝트에 ShootIfGrabbed 스크립트 추가
+Shooting Button 을 Primary Index Trigger 로 설정
+Remain Bullets 숫자 설정
+Remain Bullet Text 에 Canvas 의 텍스트 참조
+Audio Source 에 metal_sliding_door_open_01 참조
+
+Simple Shoot 컴포넌트에 
+Bullet Prefab, Casing Prefab, Muzzle Flash Prefab 설정(다운 받은 에셋의 프리팹)
+Barrel Location, Casing Exit Location 설정(총 오브젝트 안에 있음)
+
+----------------------------------------------------------------------------------------------------------------------------
+
+진동 구현
+빈오브젝트 생성 > VibrationManger
+
+VibrationManager 스크립트 생성
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class VibrationManager : MonoBehaviour
+{
+    public static VibrationManager singleton;
+
+    private void Awake()
+    {
+        if (singleton && singleton != this)
+            Destroy(this);
+        else
+            singleton = this;
+    }
+
+    /// <summary>
+    /// 진동으로 변환할 소리 와 컨트롤러 정보
+    /// </summary>
+    /// <param name="vibrationAudio"></param>
+    /// <param name="controller"></param>
+    public void TriggerVibration(AudioClip vibrationAudio, OVRInput.Controller controller)
+    {
+        // 진동을 만드는 함수에 쓰기위해 오디오 클립 변환
+        OVRHapticsClip clip = new OVRHapticsClip(vibrationAudio);
+
+        // 컨트롤러가 왼쪽 이면
+        if (controller == OVRInput.Controller.LTouch)
+            // 오디오 파일을 가지고 진동을 만듬
+            OVRHaptics.LeftChannel.Preempt(clip);
+        // 컨트롤러가 오른쪽 이면
+        else
+            OVRHaptics.RightChannel.Preempt(clip);
+    }
+
+    /// <summary>
+    /// 반복할 횟수, 빈도, 세기
+    /// </summary>
+    /// <param name="iteration"></param>
+    /// <param name="frequency"></param>
+    /// <param name="strength"></param>
+    /// <param name="controller"></param>
+    public void TriggerVibration(int iteration, int frequency, int strength, OVRInput.Controller controller)
+    {
+        OVRHapticsClip clip = new OVRHapticsClip();
+
+        for (int i = 0; i < iteration; i++)
+            //  파형(소리, 진동) 을 그려냄
+            // 빈도 로 나눈게 짝수 일때 세기만큼 파형 그리기
+            clip.WriteSample(i % frequency == 0 ? (byte)strength : (byte)0);
+
+        if (controller == OVRInput.Controller.LTouch)
+            OVRHaptics.LeftChannel.Preempt(clip);
+        else
+            OVRHaptics.RightChannel.Preempt(clip);
+    }
+}
+
+----------------------------------------------------------------------------------------------------------------------------------------------------
+
+ShootIfGrabbed 스크립트 수정
+
+ private void Update()
+    {
+        // 총을 잡고있는지 확인
+        if (ovrGrabbable.isGrabbed &&
+            // 키를 누르는순간 잡은 손 정보를 가져옴
+            OVRInput.GetDown(shootingButton, ovrGrabbable.grabbedBy.GetController()))
+        {
+            if (remainBullets > 0)
+            {
+                /* 위아래 둘중 원하는 방식으로 선택
+                VibrationManager.singleton.TriggerVibration(shootingAudio, ovrGrabbable.grabbedBy.GetController());
+                */
+
+                VibrationManager.singleton.TriggerVibration(40, 2, 255, ovrGrabbable.grabbedBy.GetController());
+
+                audioSource.PlayOneShot(shootingAudio);
+                simpleShoot.TriggerShoot();
+
+                --remainBullets;
+                remainBulletsText.text = remainBullets.ToString();
+            }
+        }
+    }
