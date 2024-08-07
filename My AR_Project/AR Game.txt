@@ -280,5 +280,290 @@ SportCar 프리팹 의 SportCar20_Collider -> SportCar20_Body_Col 에 MyCar 레�
 
 CarController 스크립트 수정
 
+    private void Update()
+    {
+        // 만일 터치된 부위가 1개 이상이라면
+        if (Input.touchCount > 0)
+        {
+            Touch touch = Input.GetTouch(0);
+
+            // 만일 터치 상태가 움직이고 있는 중이라면
+            if (touch.phase == TouchPhase.Moved)
+            {
+                // 만일, 카메라 위치에서 정면 방향으로 레이를 발사하여 부딪힌 대상이
+                // 6번 레이어 라면 터치 이동량을 구함
+                Ray ray = new Ray(
+                    Camera.main.transform.position, Camera.main.transform.forward);
+
+                RaycastHit hitInfo;
+                
+                if (Physics.Raycast(ray, out hitInfo, Mathf.Infinity, 1 << 6))
+                {
+                    // deltaPosition : 처음 터치 한 곳으로부터 이동한 거리 의 위치값
+                    Vector3 deltaPos = touch.deltaPosition;
+
+                    // 직전 프레임에서 현재 프레임까지의 x축 터치 이동량에 비례하여
+                    // 로컬 y축 방향으로 회전
+                    transform.Rotate(transform.up, deltaPos.x * -1f * rotSpeed);
+                }
+            }
+        }
+    }
+	
+---------------------------------------------------------------------------------------
+
+CarManager 스크립트 수정
+
+변수 추가
+
+    public float relocationdDistance = 1f;
+
+함수 수정
+
+    void Update()
+    {
+        // 바닥 감지
+        DetectedGround();
+
+        // 만일, 인디케이터가 활성화 중이면서 화면 터치가 있는 상태라면
+        if (indicator.activeInHierarchy && Input.touchCount > 0)
+        {
+            // 첫 번째 터치 상태를 가져옴
+            Touch touch = Input.GetTouch(0);
+
+            // 만일, 현재 클릭 or 터치한 오브젝트가 UI 오브젝트라면 Update 함수를 종료
+            // EventSystem : UI 오브젝트만 해당
+            if (EventSystem.current.currentSelectedGameObject)
+            {
+                return;
+            }
+
+            // 만일 터치가 시작된 상태라면 자동차를 인디케이터 와 동일한 곳에 생성
+            // Began : 터치 하는 순간
+            if (touch.phase == TouchPhase.Began)
+            {
+                // 만일 생성된 오브젝트가 없다면 프리팹을 씬에 생성 하고 placeObject 에 할당
+                if (placedObject == null)
+                {
+                   placedObject = Instantiate(
+                       myCar, indicator.transform.position, indicator.transform.rotation);
+                }
+                // 생성된 오브젝트가 있다면 그 오브젝트의 위치와 회전값을 변경
+                else
+                {
+                    // 만일 생성된 오브젝트와 표식(인디케이터) 사이의 거리가
+                    // 최고 이동범위 이상이라면
+                    float distacne = Vector3.Distance(
+                        placedObject.transform.position,
+                        indicator.transform.position);
+
+                    if (distacne > relocationdDistance)
+                    {
+                        placedObject.transform.SetPositionAndRotation(
+                            indicator.transform.position, indicator.transform.rotation);
+
+                    }
+                }
+            }
+        }
+    }
+	
+---------------------------------------------------------------------------------------
+
+앱 실행중 입력 없을시 꺼짐 방지
+
+AR Session Origin 에 NoneSleepMode 스크립트 생성
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class NoneSleepMode : MonoBehaviour
+{
+    private void Start()
+    {
+        // 앱 실행 중에는 절전 모드로 전환되지 않도록 설정
+        Screen.sleepTimeout = SleepTimeout.NeverSleep;
+    }
+}
+
+---------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+---------------------------------------------------------------------------------------
+
+얼굴 인식 게임
+씬 추가
+
+XR -> AR Session, AR Session Origin 추가
+
+AR Session Origin 에 AR Face Manager 추가
+-> AR Session Origin 의 자식오브젝트 AR Camera -> AR Camera Manager 의
+Facing Direction : User 로 변경(전면 카메라로 바꾸는것)
+
+카페에서 에셋 다운 받기
+
+Mask 이미지 Alpha is Transparency 체크
+M_Mask 마테리얼 생성 -> Rendering Mode : Cutout -> Aldedo 에 마스크 이미지
+
+3D 오브젝트 Quad 추가, MyMask 로 설정 -> 크기 0.18, 0.09, 1
+M_Mask 마테리얼 적용
+
+---------------------------------------------------------------------------------------
+
+MyMask 오브젝트 선택 -> AR Face 컴포넌트 추가
+MyMask 를 프리팹화 한뒤 하이어라키뷰 MyMask 제거
+
+AR Session Origin 선택 -> AR Face Manager 의 Face Prefab 에 MyMask 참조
+
+테스트 해보기
+Build Settings 에서 기존 Car Scene 은 비활성 하고 Face Scene 추가 후 빌드
+---------------------------------------------------------------------------------------
+
+빈 오브젝트 생성 후 Mask 로 설정 -> 자식오브젝트로 MyMask 프리팹 넣은후
+-> 위치값 Y축을 0.025 로 설정 -> Mask 오브젝트 를 프리팹화 한뒤 오브젝트 삭제
+
+AR Session Origin 의 Face Prefab 을 Mask 프리팹으로 설정
+
+---------------------------------------------------------------------------------------
+
+UI -> Legacy -> Button -> 이름을 Button_Mask
+-> 바텀 센터, 위치값 0, 150, 0
+                   200, 100
+
+Canvas 선택 -> Canvas Scaler -> UI Scale Mode : Scale With Screen Size
+-> 1080 , 1920 으로 설정
+
+---------------------------------------------------------------------------------------
+
+Mask 이미지 복제후 이름을 Mask_s 로 설정 -> Texture Type : Sprite 로 설정(Ui 로 사용할거임)
+Button_Mask 에 스프라이트 적용
+
+---------------------------------------------------------------------------------------
+
+Canvas 오브젝트에 UIManager 스크립트 생성
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.XR.ARFoundation;
+using UnityEngine.XR.ARCore;
+using UnityEngine.XR.ARSubsystems;
+
+public class UIManager : MonoBehaviour
+{
+    public ARFaceManager faceManager;
+
+    // 버튼을 눌렀을 때 실행될 함수
+    public void ToggleMaskImage()
+    {
+        // 얼굴이 하나가 아닌 여러명일 수 있기에 foreach문 사용
+        // faceManager 컴포넌트에서 현재 생성된 face 오브젝트를 모두 순회
+        foreach (ARFace face in faceManager.trackables)
+        {
+            // 만일 face 오브젝트가 얼굴을 인식하고 있는 상태라면
+            if (face.trackingState == TrackingState.Tracking)
+            {
+                // face 오브젝트 의 활성화 상태를 반대로 설정
+                // activeSelf : 자기 자신의 활성화 여부(부모 오브젝트와 무관)
+                // activeInHierarchy : 부모 오브젝트가 비활성화 되면 같이 비활성
+                face.gameObject.SetActive(!face.gameObject.activeSelf);
+            }
+        }
+    }
+}
+
+---------------------------------------------------------------------------------------
+
+Canvas -> UIManager -> Face Manager 에 AR Session Origin 참조
+
+Button_Mask 의 Onclicked() 에 Canvas 오브젝트 참조
+-> UIManager 의 ToggleMaskImage() 적용
+
+---------------------------------------------------------------------------------------
+
+빈 오브젝트 생성 -> MyFaceModel 로 설정
+-> Mesh Filter, Mesh Renderer, Mesh Collider 추가
+-> AR Face Mesh Visulizer 추가
+
+MyFaceModel 을 프리팹으로 저장후 오브젝트 제거
+
+---------------------------------------------------------------------------------------
+
+AR Session Origin
+-> AR Face Manager 컴포넌트 의 Face Prefab 에 MyFaceModel 로 설정
+
+---------------------------------------------------------------------------------------
+
+마테리얼 생성
+M_Face -> Rendering Mode : Cutout, Aldedo 이미지 원하는 이미지 삽입
+
+---------------------------------------------------------------------------------------
+
+얼굴에 동영상 재생 시키기
+
+빈오브젝트 생성 -> FaceVideoPlayer -> Video Player 컴포넌트 추가
+원하는 영상 을 Video Clip 에 넣고 Loop 활성화
+
+프로젝트뷰 에 Render Texture 생성 -> FaceMovieRT 로 설정
+-> FaceVideoPlayer 의 Target Texture 에 FaceMovieRT 넣기
+
+마테리얼 생성
+M_FaceMovie -> Aldedo 에 FaceMovieRT 넣기
+
+MyFaceModel 프리팹의 마테리얼 을 M_FaceMovie 로 설정
+
+---------------------------------------------------------------------------------------
+
+UI -> Legacy -> Button -> Button_ImageMat, Button_MovieMat 생성
+
+ Button_ImageMat
+위치값 -300, 150, 0
+       200, 100
+텍스트 : IMAGE
+폰트 사이즈 : 50
+
+ Button_MovieMat
+위치값  300, 150, 0
+       200, 100
+텍스트 : MOVIE
+폰트 사이즈 : 50
+
+---------------------------------------------------------------------------------------
+
+UIManager 에 함수 추가
+
+    // 마테리얼 변경 버튼 함수
+    public void SwitchFaceMaterial(int num)
+    {
+        // FaceManager 컴포넌트에서 현재 생성된 face 오브젝트를 모두 순회
+        foreach (ARFace face in faceManager.trackables)
+        {
+            // 만일 face 오브젝트가 얼굴을인식하고 있는 상태라면
+            if (face.trackingState == TrackingState.Tracking)
+            {
+                // face 오브젝트의 MeshRenderer 컴포넌트에 접근
+                MeshRenderer mr = face.GetComponent<MeshRenderer>();
+
+                // 버튼에 설정된 번호 (이미지:0번, 영상:1번)에 해당하는 머테리얼로 변경
+                mr.material = faceMats[num];
+            }
+        }
+    }
+
+---------------------------------------------------------------------------------------
+
+Canvas -> UIManager 의 Face Mats 에 M_Face(이미지), M_FaceMovie(영상) 넣기
+
+Button_ImageMat, Button_MovieMat 의 Onclicked() 에 각각 Canvas 참조
+-> UIManager -> SwitchFaceMaterial() 참조
+-> Button_ImageMat 에 0번, Button_MovieMat 에 1번 설정
+
+---------------------------------------------------------------------------------------
 
 ---------------------------------------------------------------------------------------
